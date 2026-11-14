@@ -141,9 +141,9 @@
             <span class="msg">Informe seu nome completo.</span>
           </div>
           <div class="f" data-f="cpf">
-            <label for="cpf">CPF</label>
-            <input id="cpf" name="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" required>
-            <span class="msg">CPF inválido.</span>
+            <label for="cpf">CPF <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14">
+            <span class="msg">CPF inválido. Corrija ou deixe em branco.</span>
           </div>
           <div class="f" data-f="whatsapp">
             <label for="whatsapp">WhatsApp</label>
@@ -151,9 +151,9 @@
             <span class="msg">Informe um WhatsApp com DDD.</span>
           </div>
           <div class="f" data-f="email">
-            <label for="email">E-mail</label>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
-            <span class="msg">Informe um e-mail válido.</span>
+            <label for="email">E-mail <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com">
+            <span class="msg">E-mail inválido. Corrija ou deixe em branco.</span>
           </div>
           <input class="hp" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="f" data-f="lgpd">
@@ -221,9 +221,9 @@ $('whatsapp').addEventListener('input',e=>e.target.value=maskTel(e.target.value)
 
 const rules = {
   nome: () => $('nome').value.trim().split(/\s+/).length>=2,
-  cpf: () => validCPF($('cpf').value),
+  cpf: () => !only($('cpf').value) || validCPF($('cpf').value),
   whatsapp: () => only($('whatsapp').value).length>=10,
-  email: () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
+  email: () => !$('email').value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
   lgpd: () => $('lgpd').checked
 };
 function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}
