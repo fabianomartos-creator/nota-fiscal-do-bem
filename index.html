@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nota Fiscal do Bem | Seja Notável</title>
+<meta name="description" content="Seja Notável. Sua nota pode transformar vidas. Cadastre-se na Nota Fiscal do Bem do IORM.">
+<meta name="theme-color" content="#fdf7e8">
+<style>
+  /* ====== CORES (baseadas na Nota Fiscal do Bem) ====== */
+  :root{
+    --lime:#a5c823;      /* botão / destaque */
+    --lime-soft:#e9f3c4;
+    --green:#5f8a12;     /* segunda linha dos títulos */
+    --ink:#17221a;       /* texto principal */
+    --muted:#5d665f;
+    --cream:#fdf7e8;
+    --card:#ffffff;
+    --line:#e7e3d6;
+    --dark:#18261d;      /* rodapé */
+    --err:#d13b2b;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:#fff;line-height:1.55}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+
+  /* topo */
+  .top{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid #f0ede4}
+  .top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:700;font-size:13px;line-height:1.1}
+  .brand img{height:36px;width:auto}
+  .brand .mk{width:36px;height:36px;border-radius:10px;background:var(--lime);display:grid;place-items:center;font-weight:900;color:var(--ink)}
+  .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-weight:700;font-size:14px;
+        text-decoration:none;border:0;cursor:pointer;transition:filter .15s,transform .1s}
+  .pill:hover{filter:brightness(1.04)}
+  .pill.lime{background:var(--lime);color:var(--ink)}
+  .pill.dark{background:var(--ink);color:#fff}
+
+  /* hero */
+  .hero{background:radial-gradient(1200px 500px at 80% 0%,#fdf0c8 0%,transparent 60%),var(--cream);padding:48px 0 56px}
+  .grid{display:grid;gap:36px;align-items:center}
+  @media(min-width:900px){.grid{grid-template-columns:1.05fr .95fr;gap:56px}.hero{padding:72px 0 80px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+  .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
+  h1{font-size:clamp(42px,8vw,72px);line-height:.98;font-weight:900;letter-spacing:-.045em;margin-top:14px}
+  h1 mark{background:linear-gradient(transparent 62%,var(--lime) 62%);color:inherit;padding:0 .04em}
+  .kicker{margin-top:22px;font-size:18px;font-weight:700}
+  .kicker span{color:var(--green)}
+  .lead{margin-top:10px;color:var(--muted);max-width:46ch}
+  .quote{margin-top:26px;display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;
+         padding:10px 18px;font-size:14px;width:fit-content;max-width:100%}
+  .quote b{color:var(--green)}
+
+  /* form */
+  .card{background:var(--card);border-radius:var(--radius);padding:28px 22px;border:1px solid #efe9d8;
+        box-shadow:0 30px 60px -30px rgba(60,50,10,.25)}
+  @media(min-width:900px){.card{padding:34px 32px}}
+  .card .chip{display:inline-block;background:var(--lime-soft);color:var(--green);font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px}
+  .card h2{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-top:12px;line-height:1.1}
+  .card h2 span{color:var(--green)}
+  .card p.sub{color:var(--muted);font-size:14px;margin-top:6px}
+  form{margin-top:20px;display:grid;gap:14px}
+  label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}
+  input[type=text],input[type=email],input[type=tel]{width:100%;font:inherit;font-size:16px;padding:13px 16px;
+        border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+  input:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
+  .invalid input{border-color:var(--err)}
+  .msg{display:none;color:var(--err);font-size:12px;margin-top:4px}
+  .invalid .msg{display:block}
+  .check{display:flex;gap:10px;font-size:13px;color:var(--muted);align-items:flex-start;font-weight:500}
+  .check input{margin-top:3px;width:18px;height:18px;accent-color:var(--green);flex:none}
+  .hp{position:absolute;left:-9999px}
+  button.pill{justify-content:center;font-size:17px;padding:16px;font-weight:800}
+  button[disabled]{opacity:.6;cursor:wait}
+  .safe{font-size:12px;color:var(--muted);text-align:center}
+  .alert{display:none;padding:12px;border-radius:12px;font-size:14px}
+  .alert.err{display:block;background:#fdecea;color:var(--err)}
+  .done{display:none;text-align:center;padding:24px 0}
+  .done .ic{width:60px;height:60px;border-radius:50%;background:var(--lime);margin:0 auto 14px;display:grid;place-items:center}
+  .done a{margin-top:18px}
+
+  /* passos */
+  .steps{padding:72px 0}
+  .center{text-align:center}
+  h3.big{font-size:clamp(30px,5vw,46px);line-height:1.05;font-weight:900;letter-spacing:-.04em;margin-top:12px}
+  h3.big span{color:var(--green)}
+  .steps p.c{color:var(--muted);margin:12px auto 0;max-width:56ch}
+  .cards{display:grid;gap:16px;margin-top:36px}
+  @media(min-width:760px){.cards{grid-template-columns:repeat(3,1fr)}}
+  .st{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .st .n{width:40px;height:40px;border-radius:12px;background:var(--lime-soft);color:var(--green);display:grid;place-items:center;font-weight:900}
+  .st small{display:block;margin-top:16px;font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--green);text-transform:uppercase}
+  .st b{display:block;font-size:18px;margin-top:4px;letter-spacing:-.02em}
+  .st p{color:var(--muted);font-size:14px;margin-top:6px}
+  .bar{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#f8fbe9;
+       border:1px solid #e3edbd;border-radius:16px;padding:14px 18px;font-size:14px}
+  .bar a{color:var(--green);font-weight:700;text-decoration:none}
+
+  /* CTA final */
+  .final{background:var(--cream);padding:56px 0}
+  .final .wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+  .final h3{font-size:clamp(26px,4vw,36px);font-weight:900;letter-spacing:-.035em;line-height:1.1}
+  footer{background:var(--dark);color:#b9c2bb;font-size:13px;padding:36px 0}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <!-- Troque pelo logo: <a class="brand" href="#"><img src="logo.png" alt="Nota Fiscal do Bem"></a> -->
+    <a class="brand" href="#"><span class="mk">♥</span><span>Nota Fiscal<br>do Bem</span></a>
+    <a class="pill lime" href="#form">Quero participar →</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap grid">
+    <div>
+      <span class="eyebrow">Uma campanha do IORM</span>
+      <h1>Nota Fiscal<br><mark>do Bem.</mark></h1>
+      <p class="kicker">Seja Notável. <span>Sua nota pode transformar vidas.</span></p>
+      <p class="lead">Uma escolha nas suas compras do dia a dia pode ajudar a fortalecer a arte e a educação no IORM. Cadastre-se e receba o passo a passo para ativar sua doação.</p>
+      <div class="quote">❝ <span>“A escolha é sua. <b>O passo a passo, a gente faz junto!</b>”</span></div>
+    </div>
+
+    <div class="card" id="card">
+      <div id="formBox">
+        <span class="chip">Leva menos de 1 minuto</span>
+        <h2>Faça seu cadastro e <span>seja Notável.</span></h2>
+        <p class="sub">Preencha seus dados para receber as orientações.</p>
+
+        <form id="form" novalidate>
+          <div class="f" data-f="nome">
+            <label for="nome">Nome completo</label>
+            <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required>
+            <span class="msg">Informe seu nome completo.</span>
+          </div>
+          <div class="f" data-f="cpf">
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" required>
+            <span class="msg">CPF inválido.</span>
+          </div>
+          <div class="f" data-f="whatsapp">
+            <label for="whatsapp">WhatsApp</label>
+            <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="(00) 00000-0000" maxlength="15" required>
+            <span class="msg">Informe um WhatsApp com DDD.</span>
+          </div>
+          <div class="f" data-f="email">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+            <span class="msg">Informe um e-mail válido.</span>
+          </div>
+          <input class="hp" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="f" data-f="lgpd">
+            <label class="check"><input type="checkbox" id="lgpd" required>
+              <span>Concordo em receber comunicações do IORM e com o uso dos meus dados para este cadastro, conforme a LGPD.</span></label>
+            <span class="msg">É preciso aceitar para continuar.</span>
+          </div>
+          <div class="alert" id="alert"></div>
+          <button type="submit" id="btn" class="pill lime">Quero ser Notável →</button>
+          <p class="safe">🔒 Seus dados estão seguros.</p>
+        </form>
+      </div>
+
+      <div class="done" id="done">
+        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#17221a" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+        <h2>Cadastro feito! <span>Você é Notável.</span></h2>
+        <p class="sub">Em breve você recebe o passo a passo no WhatsApp e no e-mail.</p>
+        <a id="waLink" class="pill dark" href="#" target="_blank" rel="noopener" hidden>Entrar no grupo do WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="steps">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">É simples e solidário</span>
+      <h3 class="big">Você escolhe no sistema.<br><span>Depois, pede CPF na nota.</span></h3>
+      <p class="c">A Nota Fiscal do Bem convida você a participar da doação automática da Nota Fiscal Paulista.</p>
+    </div>
+    <div class="cards">
+      <div class="st"><div class="n">1</div><small>No sistema</small><b>Escolha o IORM</b><p>Acesse a Nota Fiscal Paulista e escolha o IORM como entidade para doação automática.</p></div>
+      <div class="st"><div class="n">2</div><small>No caixa</small><b>Peça CPF na nota</b><p>Nas suas compras, informe seu CPF. Os documentos passam a apoiar o IORM.</p></div>
+      <div class="st"><div class="n">3</div><small>No dia a dia</small><b>Conheça o trabalho</b><p>Acompanhe como sua participação fortalece arte e educação no IORM.</p></div>
+    </div>
+    <div class="bar"><span>✔ No caixa, é só seu CPF. <b>No sistema, você escolhe o IORM.</b></span><a href="#form">Cadastrar agora →</a></div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h3>Ser Notável começa<br>com uma escolha.</h3>
+    <a class="pill dark" href="#form">Quero participar →</a>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© <span id="y"></span> IORM · Nota Fiscal do Bem</span><span>Todos os direitos reservados</span></div></footer>
+
+<script>
+/* ====== CONFIGURAÇÃO ====== */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZ_r61j-xeE7DxmCt8FGpP-UjS1W6X-Xh3sLfMuN1NqLQ1GJaK1yQTGMUEIJK9iZxo/exec";   // termina em /exec
+const WHATSAPP_GROUP = "";                               // opcional: link do grupo após cadastro
+
+const $ = id => document.getElementById(id);
+$('y').textContent = new Date().getFullYear();
+
+const only = v => v.replace(/\D/g,'');
+function maskCPF(v){v=only(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
+function maskTel(v){v=only(v).slice(0,11);if(v.length<=10)return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2');return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
+function validCPF(c){c=only(c);if(c.length!==11||/^(\d)\1+$/.test(c))return false;
+  for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=c[i]*(t+1-i);if(((s*10)%11)%10!=c[t])return false;}return true;}
+
+$('cpf').addEventListener('input',e=>e.target.value=maskCPF(e.target.value));
+$('whatsapp').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
+
+const rules = {
+  nome: () => $('nome').value.trim().split(/\s+/).length>=2,
+  cpf: () => validCPF($('cpf').value),
+  whatsapp: () => only($('whatsapp').value).length>=10,
+  email: () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
+  lgpd: () => $('lgpd').checked
+};
+function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}
+Object.keys(rules).forEach(k=>{
+  const el = k==='lgpd'?$('lgpd'):$(k);
+  el.addEventListener('blur',()=>check(k));
+  el.addEventListener('input',()=>{if(el.closest('.f').classList.contains('invalid'))check(k);});
+});
+
+document.querySelectorAll('a[href="#form"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();$('card').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('nome').focus({preventScroll:true}),400);}));
+
+$('form').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const bad = Object.keys(rules).filter(k=>!check(k));
+  if(bad.length){ (bad[0]==='lgpd'?$('lgpd'):$(bad[0])).focus(); return; }
+  if(e.target.site.value) return; // robô
+
+  const p = new URLSearchParams(location.search);
+  const data = new URLSearchParams({
+    nome: $('nome').value.trim(),
+    cpf: $('cpf').value,
+    whatsapp: $('whatsapp').value,
+    email: $('email').value.trim().toLowerCase(),
+    utm_source: p.get('utm_source')||'', utm_medium: p.get('utm_medium')||'',
+    utm_campaign: p.get('utm_campaign')||'', pagina: location.href.split('?')[0]
+  });
+
+  const btn=$('btn'); btn.disabled=true; btn.textContent='ENVIANDO...'; $('alert').className='alert';
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:data});
+    $('formBox').style.display='none'; $('done').style.display='block';
+    if(WHATSAPP_GROUP){ $('waLink').href=WHATSAPP_GROUP; $('waLink').hidden=false; }
+  }catch(err){
+    $('alert').textContent='Não foi possível enviar. Verifique sua conexão e tente novamente.';
+    $('alert').className='alert err';
+    btn.disabled=false; btn.textContent='Quero ser Notável →';
+  }
+});
+</script>
+</body>
+</html>
