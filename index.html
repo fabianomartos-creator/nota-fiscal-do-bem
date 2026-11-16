@@ -222,6 +222,7 @@
 /* ====== CONFIGURAÇÃO ====== */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZ_r61j-xeE7DxmCt8FGpP-UjS1W6X-Xh3sLfMuN1NqLQ1GJaK1yQTGMUEIJK9iZxo/exec";   // termina em /exec
 const WHATSAPP_GROUP = "";                               // opcional: link do grupo após cadastro
+const SEND_TIMEOUT_MS = 30000;                        // tempo máximo de espera pelo envio
 
 const $ = id => document.getElementById(id);
 $('y').textContent = new Date().getFullYear();
@@ -280,14 +281,21 @@ $('form').addEventListener('submit', async e=>{
   });
 
   const btn=$('btn'); btn.disabled=true; btn.textContent='ENVIANDO...'; $('alert').className='alert';
+  const ctrl=new AbortController();
+  const slow=setTimeout(()=>{btn.textContent='AINDA ENVIANDO...';},8000);
+  const kill=setTimeout(()=>ctrl.abort(),SEND_TIMEOUT_MS);
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:data});
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:data,signal:ctrl.signal});
     $('formBox').style.display='none'; $('done').style.display='block';
     if(WHATSAPP_GROUP){ $('waLink').href=WHATSAPP_GROUP; $('waLink').hidden=false; }
   }catch(err){
-    $('alert').textContent='Não foi possível enviar. Verifique sua conexão e tente novamente.';
+    $('alert').textContent = err && err.name==='AbortError'
+      ? 'O envio demorou mais que o normal e foi interrompido. Toque no botão para tentar de novo.'
+      : 'Não foi possível enviar. Verifique sua conexão e tente novamente.';
     $('alert').className='alert err';
     btn.disabled=false; btn.textContent='Quero ser Notável →';
+  }finally{
+    clearTimeout(slow); clearTimeout(kill);
   }
 });
 </script>
