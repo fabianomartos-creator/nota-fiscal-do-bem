@@ -65,10 +65,15 @@
   .card p.sub{color:var(--muted);font-size:14px;margin-top:6px}
   form{margin-top:20px;display:grid;gap:14px}
   label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}
-  input[type=text],input[type=email],input[type=tel]{width:100%;font:inherit;font-size:16px;padding:13px 16px;
+  input[type=text],input[type=email],input[type=tel],textarea{width:100%;font:inherit;font-size:16px;padding:13px 16px;
         border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;color:var(--ink);transition:border-color .15s,box-shadow .15s}
-  input:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
-  .invalid input{border-color:var(--err)}
+  input:focus,textarea:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
+  .invalid input,.invalid textarea{border-color:var(--err)}
+  textarea{display:block;min-height:92px;resize:vertical;line-height:1.45}
+  .count{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+  .count.max{color:var(--green);font-weight:700}
+  .hint{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+  .sep{border-top:1px dashed var(--line);padding-top:16px;margin-top:2px}
   .msg{display:none;color:var(--err);font-size:12px;margin-top:4px}
   .invalid .msg{display:block}
   .check{display:flex;gap:10px;font-size:13px;color:var(--muted);align-items:flex-start;font-weight:500}
@@ -155,6 +160,17 @@
             <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com">
             <span class="msg">E-mail inválido. Corrija ou deixe em branco.</span>
           </div>
+          <div class="f" data-f="observacao">
+            <label for="observacao">Observação <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <textarea id="observacao" name="observacao" rows="3" maxlength="300" placeholder="Alguma informação adicional sobre este cadastro" aria-describedby="obsCount"></textarea>
+            <div class="count" id="obsCount">0/300</div>
+          </div>
+          <div class="f sep" data-f="cadastrador">
+            <label for="cadastrador">Cadastrador</label>
+            <input id="cadastrador" name="cadastrador" type="text" autocomplete="off" maxlength="200" placeholder="Nome ou identificação" aria-describedby="cadHint" required>
+            <span class="hint" id="cadHint">Quem está fazendo este cadastro, não o participante inscrito.</span>
+            <span class="msg">Informe quem está fazendo o cadastro.</span>
+          </div>
           <input class="hp" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="f" data-f="lgpd">
             <label class="check"><input type="checkbox" id="lgpd" required>
@@ -219,11 +235,21 @@ function validCPF(c){c=only(c);if(c.length!==11||/^(\d)\1+$/.test(c))return fals
 $('cpf').addEventListener('input',e=>e.target.value=maskCPF(e.target.value));
 $('whatsapp').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
 
+const OBS_MAX = 300;
+function updObs(){
+  const t=$('observacao');
+  if(t.value.length>OBS_MAX) t.value=t.value.slice(0,OBS_MAX); // garantia extra além do maxlength
+  $('obsCount').textContent=t.value.length+'/'+OBS_MAX;
+  $('obsCount').classList.toggle('max',t.value.length>=OBS_MAX);
+}
+$('observacao').addEventListener('input',updObs);
+
 const rules = {
   nome: () => $('nome').value.trim().split(/\s+/).length>=2,
   cpf: () => !only($('cpf').value) || validCPF($('cpf').value),
   whatsapp: () => only($('whatsapp').value).length>=10,
   email: () => !$('email').value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
+  cadastrador: () => $('cadastrador').value.trim().length>0,
   lgpd: () => $('lgpd').checked
 };
 function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}
@@ -248,7 +274,9 @@ $('form').addEventListener('submit', async e=>{
     whatsapp: $('whatsapp').value,
     email: $('email').value.trim().toLowerCase(),
     utm_source: p.get('utm_source')||'', utm_medium: p.get('utm_medium')||'',
-    utm_campaign: p.get('utm_campaign')||'', pagina: location.href.split('?')[0]
+    utm_campaign: p.get('utm_campaign')||'', pagina: location.href.split('?')[0],
+    observacao: $('observacao').value.slice(0,OBS_MAX), // enviada como digitada (sem cortar espaços/quebras)
+    cadastrador: $('cadastrador').value.trim()
   });
 
   const btn=$('btn'); btn.disabled=true; btn.textContent='ENVIANDO...'; $('alert').className='alert';
