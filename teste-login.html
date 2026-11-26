@@ -65,6 +65,8 @@
   .quem b{color:var(--ink)}
   .link{background:none;border:0;color:var(--green);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px}
 
+  .mostrar{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);margin:8px 0 0;cursor:pointer}
+  .mostrar input{width:16px;height:16px;accent-color:var(--green)}
   .troca{text-align:center;font-size:14px;color:var(--muted);margin-top:18px}
   .dica{font-size:13px;color:var(--muted)}
 
@@ -85,12 +87,13 @@
       <div id="loginBox">
         <form id="loginForm" novalidate>
           <div class="f">
-            <label for="login">Login</label>
-            <input id="login" name="login" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" placeholder="seu login ou e-mail">
+            <label for="login">E-mail</label>
+            <input id="login" name="login" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="seu e-mail">
           </div>
           <div class="f">
             <label for="senha">Senha</label>
             <input id="senha" name="senha" type="password" autocomplete="current-password" maxlength="200">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="senha"> Mostrar senha</label>
           </div>
           <div class="alert" id="loginAlert" role="alert"></div>
           <button type="submit" id="loginBtn" class="pill lime">Entrar →</button>
@@ -101,22 +104,23 @@
       <!-- 1b) CRIAR CONTA (qualquer pessoa pode criar a sua) -->
       <div id="contaBox" hidden>
         <form id="contaForm" novalidate>
-          <p class="dica">Crie seu acesso de captador. Depois é só entrar com este login e esta senha.</p>
+          <p class="dica">Crie seu acesso de captador. Depois é só entrar com seu e-mail e sua senha.</p>
           <div class="f">
-            <label for="cNome">Seu nome (como vai aparecer na planilha)</label>
-            <input id="cNome" type="text" autocomplete="name" maxlength="60" placeholder="Ex.: Rafael B">
+            <label for="cNome">Nome completo</label>
+            <input id="cNome" type="text" autocomplete="name" maxlength="60" placeholder="Nome e sobrenome">
           </div>
           <div class="f">
-            <label for="cLogin">Login</label>
-            <input id="cLogin" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" placeholder="sem espaços e sem acentos (pode ser seu e-mail)">
+            <label for="cEmail">E-mail</label>
+            <input id="cEmail" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="voce@email.com">
+          </div>
+          <div class="f">
+            <label for="cTel">Telefone</label>
+            <input id="cTel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(00) 00000-0000">
           </div>
           <div class="f">
             <label for="cSenha">Senha</label>
             <input id="cSenha" type="password" autocomplete="new-password" maxlength="100" placeholder="mínimo 6 caracteres">
-          </div>
-          <div class="f">
-            <label for="cSenha2">Repita a senha</label>
-            <input id="cSenha2" type="password" autocomplete="new-password" maxlength="100">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="cSenha"> Mostrar senha</label>
           </div>
           <input class="hp" type="text" name="site2" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="alert" id="contaAlert" role="alert"></div>
@@ -212,15 +216,17 @@ const ERROS_LOGIN={
   bloqueado:'Muitas tentativas erradas. Aguarde 15 minutos e tente de novo.',
   dados:'Informe o login e a senha.',
   servidor:'O servidor teve um problema. Tente de novo em instantes.'};
-const LOGIN_RE=/^[a-z0-9][a-z0-9._@-]{2,59}$/;
+const EMAIL_RE=/^[a-z0-9][a-z0-9._%+-]*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 const NOME_RE=/^[\p{L}\p{N}][\p{L}\p{N} .'\-]{1,59}$/u;
+const nomeValido=n=>{const p=n.split(' ');return NOME_RE.test(n)&&p.length>=2&&p[0].length>=2;};
+const telDigitos=t=>{let d=only(t);if((d.length===12||d.length===13)&&d.indexOf('55')===0)d=d.slice(2);return d;};
 const ERROS_CONTA={
-  nome_invalido:'Nome inválido: use letras e números (de 2 a 60 caracteres), sem símbolos como = + @.',
-  login_invalido:'Login inválido: use de 3 a 60 letras minúsculas, números, ponto, hífen, sublinhado ou @ (pode ser seu e-mail), sem espaços nem acentos.',
+  nome_invalido:'Informe seu nome completo (nome e sobrenome), só com letras e números.',
+  email_invalido:'E-mail inválido. Confira se está escrito certo (ex.: voce@email.com).',
+  telefone_invalido:'Telefone inválido. Informe com DDD (ex.: (11) 91234-5678).',
   senha_curta:'A senha precisa ter de 6 a 100 caracteres.',
-  senhas_diferentes:'As duas senhas não são iguais.',
-  login_existe:'Esse login já está em uso. Escolha outro. Se for o seu, toque em "Entrar" e use sua senha.',
-  nome_existe:'Já existe um captador com esse nome. Use outro (por exemplo, acrescentando a inicial do sobrenome).',
+  email_existe:'Já existe uma conta com esse e-mail. Toque em "Entrar" e use sua senha.',
+  nome_existe:'Já existe um captador com esse nome. Acrescente o sobrenome completo ou uma inicial.',
   limite:'Muitas tentativas de criar conta agora. Aguarde cerca de uma hora e tente de novo.',
   servidor:'O servidor teve um problema. Tente de novo em instantes.'};
 const ERROS_CAD={
@@ -237,37 +243,43 @@ $('loginForm').addEventListener('submit',async e=>{
   const btn=$('loginBtn');btn.disabled=true;btn.textContent='ENTRANDO...';avisar('loginAlert','');
   try{
     const r=await chamar({acao:'login',login,senha});
-    if(r&&r.ok){guardarSessao({token:r.token,nome:r.nome});$('senha').value='';iniciarTela();if(!$('formBox').hidden)$('nome').focus();}
+    if(r&&r.ok){guardarSessao({token:r.token,nome:r.nome});$('senha').value='';esconderSenhas();iniciarTela();if(!$('formBox').hidden)$('nome').focus();}
     else avisar('loginAlert',ERROS_LOGIN[r&&r.erro]||ERROS_LOGIN.servidor);
   }catch(err){avisar('loginAlert',semRede(err));}
   finally{btn.disabled=false;btn.textContent='Entrar →';}
 });
+/* ---- mostrar/esconder senha ---- */
+document.querySelectorAll('.vs').forEach(c=>c.addEventListener('change',()=>{$(c.dataset.alvo).type=c.checked?'text':'password';}));
+function esconderSenhas(){document.querySelectorAll('.vs').forEach(c=>{c.checked=false;$(c.dataset.alvo).type='password';});}
+
 /* ---- criar conta ---- */
+$('cTel').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
 $('criarConta').addEventListener('click',()=>{avisar('contaAlert','');mostrar('conta');$('cNome').focus();});
 $('jaTenho').addEventListener('click',()=>{avisar('loginAlert','');mostrar('login');$('login').focus();});
 $('contaForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(e.target.site2.value)return;           // robô
   const nome=$('cNome').value.trim().replace(/\s+/g,' ');
-  const login=$('cLogin').value.trim().toLowerCase();
-  const senha=$('cSenha').value,senha2=$('cSenha2').value;
-  if(!NOME_RE.test(nome)){avisar('contaAlert',ERROS_CONTA.nome_invalido);$('cNome').focus();return;}
-  if(!LOGIN_RE.test(login)){avisar('contaAlert',ERROS_CONTA.login_invalido);$('cLogin').focus();return;}
+  const email=$('cEmail').value.trim().toLowerCase();
+  const tel=telDigitos($('cTel').value);
+  const senha=$('cSenha').value;
+  if(!nomeValido(nome)){avisar('contaAlert',ERROS_CONTA.nome_invalido);$('cNome').focus();return;}
+  if(email.length>80||!EMAIL_RE.test(email)){avisar('contaAlert',ERROS_CONTA.email_invalido);$('cEmail').focus();return;}
+  if(tel.length!==10&&tel.length!==11){avisar('contaAlert',ERROS_CONTA.telefone_invalido);$('cTel').focus();return;}
   if(senha.length<6||senha.length>100){avisar('contaAlert',ERROS_CONTA.senha_curta);$('cSenha').focus();return;}
-  if(senha!==senha2){avisar('contaAlert',ERROS_CONTA.senhas_diferentes);$('cSenha2').focus();return;}
   const btn=$('contaBtn');btn.disabled=true;btn.textContent='CRIANDO...';avisar('contaAlert','');
   try{
-    const r=await chamar({acao:'criar_conta',nome,login,senha});
+    const r=await chamar({acao:'criar_conta',nome,email,telefone:$('cTel').value,senha});
     if(r&&r.ok){
       guardarSessao({token:r.token,nome:r.nome});
-      ['cNome','cLogin','cSenha','cSenha2'].forEach(id=>$(id).value='');
+      ['cNome','cEmail','cTel','cSenha'].forEach(id=>$(id).value='');esconderSenhas();
       iniciarTela();$('nome').focus();
     }else avisar('contaAlert',ERROS_CONTA[r&&r.erro]||ERROS_CONTA.servidor);
   }catch(err){avisar('contaAlert',semRede(err));}
   finally{btn.disabled=false;btn.textContent='Criar conta e entrar →';}
 });
 
-$('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('senha').value='';avisar('loginAlert','');mostrar('login');});
+$('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('senha').value='';esconderSenhas();avisar('loginAlert','');mostrar('login');});
 
 /* ---- validação do cadastro ---- */
 const rules={

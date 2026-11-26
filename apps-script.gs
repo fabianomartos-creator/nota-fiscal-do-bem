@@ -14,8 +14,9 @@
  * - As senhas ficam na aba "Captadores" SÓ como hash (nunca em texto).
  * - O nome gravado na coluna Captador vem sempre da aba "Captadores", nunca da página.
  * - Depois de MAX_FALHAS senhas erradas, o login fica bloqueado por BLOQUEIO_SEGUNDOS.
- * - Qualquer pessoa pode criar a própria conta na tela de login (acesso imediato). Para conter abuso:
- *   login único, nome de captador único e limite de tentativas de criação por hora.
+ * - Qualquer pessoa pode criar a própria conta na tela de login, com nome completo, e-mail, telefone e senha
+ *   (o e-mail é o login; acesso imediato). Para conter abuso: e-mail único, nome de captador único
+ *   e limite de tentativas de criação por hora. O e-mail NÃO é confirmado por mensagem.
  *   Contas indevidas podem ser desativadas no menu Captadores (a aba Captadores mostra quando e como cada conta nasceu).
  */
 
@@ -32,13 +33,14 @@ const FORMATO_DATA = 'dd/MM/yyyy HH:mm:ss';
 const LIMITE_PADRAO = 200;
 
 const ABA_CAPTADORES = 'Captadores';
-const CAB_CAPTADORES = ['Login', 'Nome', 'Hash da senha', 'Salt', 'Ativo', 'Criado em', 'Origem'];
+const CAB_CAPTADORES = ['Login', 'Nome', 'Hash da senha', 'Salt', 'Ativo', 'Criado em', 'Origem', 'Telefone'];
 const MAX_FALHAS = 5;
 const BLOQUEIO_SEGUNDOS = 900;
 const SESSAO_HORAS = 12;
 const PROP_SEGREDO = 'SEGREDO_SESSAO';
 const MAX_TENTATIVAS_CONTA = 40;          // tentativas de criar conta por hora (somando todo mundo)
-const REGEX_LOGIN = /^[a-z0-9][a-z0-9._@-]{2,59}$/;     // 3 a 60 caracteres; pode ser um e-mail
+const REGEX_LOGIN = /^[a-z0-9][a-z0-9._@+-]{2,79}$/;     // 3 a 80 caracteres; pode ser um e-mail
+const REGEX_EMAIL = /^[a-z0-9][a-z0-9._%+-]*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 const REGEX_NOME_CONTA = /^[\p{L}\p{N}][\p{L}\p{N} .'\-]{1,59}$/u;   // letras, números, espaço, ponto, apóstrofo e hífen
 
 // =====================================================================
@@ -128,7 +130,7 @@ function abaCaptadores_(criar) {
   let sh = ss.getSheetByName(ABA_CAPTADORES);
   if (!sh && criar) {
     sh = ss.insertSheet(ABA_CAPTADORES, ss.getSheets().length); // sempre no fim: a 1ª aba continua sendo a dos cadastros
-    sh.getRange('A:G').setNumberFormat('@');
+    sh.getRange('A:H').setNumberFormat('@');
     sh.getRange(1, 1, 1, CAB_CAPTADORES.length).setValues([CAB_CAPTADORES]);
     sh.setFrozenRows(1);
   } else if (sh && criar) {
@@ -136,14 +138,14 @@ function abaCaptadores_(criar) {
   }
   return sh;
 }
-// Numa aba criada por uma versão anterior (5 colunas), acrescenta "Criado em" e "Origem" sem mexer no resto.
+// Numa aba criada por uma versão anterior, acrescenta as colunas que faltam (Criado em, Origem, Telefone) sem mexer no resto.
 function completarCabecalhoCaptadores_(sh) {
   const atual = sh.getRange(1, 1, 1, CAB_CAPTADORES.length).getValues()[0];
   let mudou = false;
   for (let i = 0; i < CAB_CAPTADORES.length; i++) {
     if (String(atual[i]).trim() === '') { sh.getRange(1, i + 1).setValue(CAB_CAPTADORES[i]); mudou = true; }
   }
-  if (mudou) sh.getRange('F:G').setNumberFormat('@');
+  if (mudou) sh.getRange('F:H').setNumberFormat('@');
 }
 function buscarCaptador_(login) {
   const sh = abaCaptadores_(false);
@@ -162,7 +164,7 @@ function buscarCaptador_(login) {
 }
 
 function acaoLogin_(p) {
-  const login = String(p.login || '').trim().toLowerCase().slice(0, 60);
+  const login = String(p.login || '').trim().toLowerCase().slice(0, 80);
   const senha = String(p.senha || '').slice(0, 200);
   if (!login || !senha) return { ok: false, erro: 'dados' };
 
@@ -195,32 +197,45 @@ function nomeEmUso_(nome) {
   return sh.getRange(2, 2, sh.getLastRow() - 1, 1).getValues().some(function (l) { return chaveNome_(l[0]) === alvo; });
 }
 
-// Qualquer pessoa cria a própria conta; ela já nasce ativa e a pessoa entra na hora.
+// Telefone brasileiro: aceita com ou sem DDD de país (+55) e devolve "(11) 91234-5678"; null se inválido.
+function normalizarTelefone_(t) {
+  let d = String(t || '').replace(/\D/g, '');
+  if ((d.length === 12 || d.length === 13) && d.indexOf('55') === 0) d = d.slice(2);
+  if (d.length === 11) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+  if (d.length === 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+  return null;
+}
+
+// Qualquer pessoa cria a própria conta (nome completo, e-mail, telefone e senha); ela já nasce ativa
+// e a pessoa entra na hora. O e-mail é o login.
 function acaoCriarConta_(p) {
   const cache = CacheService.getScriptCache();
   const tentativas = Number(cache.get('tentativas_conta') || 0);
   if (tentativas >= MAX_TENTATIVAS_CONTA) return { ok: false, erro: 'limite' };
   cache.put('tentativas_conta', String(tentativas + 1), 3600);
 
-  const login = String(p.login || '').trim().toLowerCase();
   const nome = String(p.nome || '').trim().replace(/\s+/g, ' ');
+  const email = String(p.email || '').trim().toLowerCase();
+  const telefone = normalizarTelefone_(p.telefone);
   const senha = String(p.senha || '');
-  if (!REGEX_LOGIN.test(login)) return { ok: false, erro: 'login_invalido' };
-  if (!REGEX_NOME_CONTA.test(nome)) return { ok: false, erro: 'nome_invalido' };
+  const palavras = nome.split(' ');
+  if (!REGEX_NOME_CONTA.test(nome) || palavras.length < 2 || palavras[0].length < 2) return { ok: false, erro: 'nome_invalido' };
+  if (email.length > 80 || !REGEX_EMAIL.test(email) || !REGEX_LOGIN.test(email)) return { ok: false, erro: 'email_invalido' };
+  if (!telefone) return { ok: false, erro: 'telefone_invalido' };
   if (senha.length < 6 || senha.length > 100) return { ok: false, erro: 'senha_curta' };
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    if (buscarCaptador_(login)) return { ok: false, erro: 'login_existe' };
+    if (buscarCaptador_(email)) return { ok: false, erro: 'email_existe' };
     if (nomeEmUso_(nome)) return { ok: false, erro: 'nome_existe' };
     const sh = abaCaptadores_(true);
     const salt = Utilities.getUuid();
-    sh.appendRow([login, nome, hashSenha_(salt, senha), salt, 'SIM', agoraIso_(), 'autocadastro']);
+    sh.appendRow([email, nome, hashSenha_(salt, senha), salt, 'SIM', agoraIso_(), 'autocadastro', telefone]);
   } finally {
     lock.releaseLock();
   }
-  return { ok: true, token: criarToken_(login), nome: nome };
+  return { ok: true, token: criarToken_(email), nome: nome };
 }
 
 // =====================================================================
@@ -345,7 +360,7 @@ function adicionarCaptador_(login, nome, senha) {
     sh.getRange(existente.linha, 2, 1, 4).setValues([[nome, hash, salt, 'SIM']]);
     return 'atualizado';
   }
-  sh.appendRow([login, nome, hash, salt, 'SIM', agoraIso_(), 'menu']);
+  sh.appendRow([login, nome, hash, salt, 'SIM', agoraIso_(), 'menu', '']);
   return 'criado';
 }
 function desativarCaptador_(login) {
@@ -368,9 +383,9 @@ function pedir_(titulo, mensagem) {
 }
 function menuAdicionarCaptador() {
   const ui = SpreadsheetApp.getUi();
-  const nome = pedir_('Captador (1 de 3)', 'Nome que vai aparecer na coluna Captador (ex.: Rafael B):');
+  const nome = pedir_('Captador (1 de 3)', 'Nome que vai aparecer na coluna Captador (ex.: Rafael Barbosa):');
   if (nome === null) return;
-  const login = pedir_('Captador (2 de 3)', 'Login para entrar na página (sem espaços e sem acentos, ex.: rafael):');
+  const login = pedir_('Captador (2 de 3)', 'Login para entrar na página (use o e-mail do captador):');
   if (login === null) return;
   const senha = pedir_('Captador (3 de 3)', 'Senha (mínimo 6 caracteres). Combine com o captador por um canal privado:');
   if (senha === null) return;
@@ -383,7 +398,7 @@ function menuAdicionarCaptador() {
 }
 function menuDesativarCaptador() {
   const ui = SpreadsheetApp.getUi();
-  const login = pedir_('Desativar captador', 'Login do captador que não deve mais entrar:');
+  const login = pedir_('Desativar captador', 'Login (e-mail) do captador que não deve mais entrar:');
   if (login === null) return;
   ui.alert(desativarCaptador_(login) ? 'Captador desativado. Ele não consegue mais entrar nem cadastrar.' : 'Não encontrei esse login.');
 }
