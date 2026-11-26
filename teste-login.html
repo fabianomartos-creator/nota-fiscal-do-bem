@@ -139,7 +139,7 @@
 
 <script>
 /* ====== CONFIGURAÇÃO ====== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoJP04wPWW5VIbr4v8dulUNOC8NGi5CUSx_MWOwuhrvd1hBPZW0czRJkvePYKHYzU/exec";
+const SCRIPT_URL = "";             // link do Apps Script da planilha "Cadastros" (termina em /exec). Em branco = página ainda não configurada.
 const TIMEOUT_MS = 30000;          // tempo máximo de espera por uma resposta do servidor
 const WHATSAPP_GROUP = "";         // opcional: link do grupo após o cadastro
 const CHAVE_SESSAO = 'nfb_sessao';
@@ -166,6 +166,7 @@ function avisar(id,texto){const a=$(id);a.textContent=texto||'';a.className=text
 
 /* ---- chamada ao servidor (lê a resposta: só mostra sucesso se o servidor confirmou) ---- */
 async function chamar(dados){
+  if(!SCRIPT_URL)throw new Error('nao_configurada');
   const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),TIMEOUT_MS);
   try{
     const r=await fetch(SCRIPT_URL,{method:'POST',body:new URLSearchParams(dados),signal:ctrl.signal});
@@ -184,7 +185,7 @@ const ERROS_CAD={
   nome:'O servidor não aceitou o nome. Informe nome e sobrenome.',
   whatsapp:'O servidor não aceitou o WhatsApp. Informe com DDD.',
   servidor:'O servidor teve um problema. Toque em Cadastrar para tentar de novo.'};
-const semRede=err=>err&&err.name==='AbortError'?'Demorou demais para responder. Tente de novo.':'Não foi possível conectar. Verifique a internet e tente de novo.';
+const semRede=err=>err&&err.message==='nao_configurada'?'Esta página ainda não está configurada (falta o link do servidor).':err&&err.name==='AbortError'?'Demorou demais para responder. Tente de novo.':'Não foi possível conectar. Verifique a internet e tente de novo.';
 
 /* ---- entrar ---- */
 $('loginForm').addEventListener('submit',async e=>{
@@ -222,11 +223,8 @@ $('form').addEventListener('submit',async e=>{
   if(e.target.site.value)return;            // robô
   if(!sessao){limparSessao();mostrar('login');return;}
 
-  const p=new URLSearchParams(location.search);
   const dados={acao:'cadastrar',token:sessao.token,idem:idemAtual,
-    nome:$('nome').value.trim(),cpf:$('cpf').value,whatsapp:$('whatsapp').value,
-    utm_source:p.get('utm_source')||'',utm_medium:p.get('utm_medium')||'',utm_campaign:p.get('utm_campaign')||'',
-    pagina:location.origin+location.pathname};
+    nome:$('nome').value.trim(),cpf:$('cpf').value,whatsapp:$('whatsapp').value};
 
   const btn=$('btn');btn.disabled=true;btn.textContent='ENVIANDO...';avisar('alert','');
   try{
@@ -238,7 +236,8 @@ $('form').addEventListener('submit',async e=>{
       limparSessao();mostrar('login');
       avisar('loginAlert','Sua sessão expirou. Entre de novo: o que você digitou foi mantido.');
     }else avisar('alert',ERROS_CAD[r&&r.erro]||ERROS_CAD.servidor);
-  }catch(err){avisar('alert',err&&err.name==='AbortError'
+  }catch(err){avisar('alert',err&&err.message==='nao_configurada'?semRede(err)
+      :err&&err.name==='AbortError'
       ?'O envio demorou e foi interrompido. Toque em Cadastrar para tentar de novo (não duplica).'
       :'Não foi possível enviar. Verifique a internet e toque em Cadastrar para tentar de novo.');}
   finally{btn.disabled=false;btn.textContent='Cadastrar →';}
