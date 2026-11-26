@@ -23,6 +23,10 @@ const RENOMEAR = { 'Cadastrador': 'Captador' };
 // Colunas gravadas como texto (para não perder zeros nem virar número/data).
 const COLUNAS_TEXTO = ['CPF', 'WhatsApp', 'CEP', 'Número'];
 
+// Fuso horário de Brasília (sem horário de verão desde 2019).
+const FUSO = 'America/Sao_Paulo';
+const FORMATO_DATA = 'dd/MM/yyyy HH:mm:ss';
+
 // Tamanho máximo aceito por campo (o formulário já limita; aqui é a garantia).
 const LIMITE_PADRAO = 200;
 const LIMITE_OBSERVACAO = 300;
@@ -115,11 +119,14 @@ function gravar_(p) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]; // primeira aba
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss.getSpreadsheetTimeZone() !== FUSO) ss.setSpreadsheetTimeZone(FUSO);
+    const sh = ss.getSheets()[0]; // primeira aba
     const cabecalho = garantirCabecalho_(sh);
 
     const valores = {
-      'Data/Hora': new Date(),
+      // Data/hora já escrita no horário de Brasília (não depende do fuso da planilha nem da conta Google)
+      'Data/Hora': Utilities.formatDate(new Date(), FUSO, 'yyyy-MM-dd HH:mm:ss'),
       'Nome': limpo_(p.nome),
       'CPF': limpo_(p.cpf),
       'WhatsApp': limpo_(p.whatsapp),
@@ -144,14 +151,19 @@ function gravar_(p) {
       return Object.prototype.hasOwnProperty.call(valores, h) ? valores[h] : '';
     });
     sh.appendRow(linha);
+    const iData = cabecalho.indexOf('Data/Hora');
+    if (iData !== -1) sh.getRange(sh.getLastRow(), iData + 1).setNumberFormat(FORMATO_DATA);
   } finally {
     lock.releaseLock();
   }
 }
 
-// Atualiza só o cabeçalho (renomeia Cadastrador -> Captador e acrescenta as colunas novas).
-// Serve para conferir se este código está no projeto certo: selecione esta função
-// na barra de cima do editor e clique em Executar. Não grava nenhuma inscrição.
+// Atualiza só o cabeçalho (renomeia Cadastrador -> Captador, acrescenta as colunas novas)
+// e coloca a planilha no fuso de Brasília. Serve para conferir se este código está no
+// projeto certo: selecione esta função na barra de cima do editor e clique em Executar.
+// Não grava nenhuma inscrição e não altera os dados existentes.
 function atualizarCabecalho() {
-  garantirCabecalho_(SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss.getSpreadsheetTimeZone() !== FUSO) ss.setSpreadsheetTimeZone(FUSO);
+  garantirCabecalho_(ss.getSheets()[0]);
 }
