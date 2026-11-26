@@ -13,11 +13,15 @@
 const CABECALHO = [
   'Data/Hora', 'Nome', 'CPF', 'WhatsApp', 'E-mail',
   'utm_source', 'utm_medium', 'utm_campaign', 'Página',
-  'Observação', 'Cadastrador'
+  'Observação', 'Captador',
+  'CEP', 'Endereço', 'Número', 'Bairro', 'Cidade', 'UF'
 ];
 
+// Colunas que mudaram de nome: o cabeçalho antigo é renomeado NO LUGAR (os dados da coluna ficam intactos).
+const RENOMEAR = { 'Cadastrador': 'Captador' };
+
 // Colunas gravadas como texto (para não perder zeros nem virar número/data).
-const COLUNAS_TEXTO = ['CPF', 'WhatsApp'];
+const COLUNAS_TEXTO = ['CPF', 'WhatsApp', 'CEP', 'Número'];
 
 // Tamanho máximo aceito por campo (o formulário já limita; aqui é a garantia).
 const LIMITE_PADRAO = 200;
@@ -74,11 +78,25 @@ function garantirCabecalho_(sh) {
     atual = CABECALHO.slice();
     criouAgora = true;
   } else {
+    // renomeia cabeçalhos antigos (só o texto da célula da linha 1; nada mais é tocado)
+    atual.forEach(function (h, i) {
+      const novo = RENOMEAR[h];
+      if (novo && atual.indexOf(novo) === -1) {
+        sh.getRange(1, i + 1).setValue(novo);
+        atual[i] = novo;
+      }
+    });
     // remove células vazias do fim da linha 1 para acrescentar logo depois do último título
     while (atual.length && atual[atual.length - 1] === '') atual.pop();
     const faltando = CABECALHO.filter(function (h) { return atual.indexOf(h) === -1; });
     if (faltando.length) {
       sh.getRange(1, atual.length + 1, 1, faltando.length).setValues([faltando]);
+      // colunas novas que devem ser texto (ex.: CEP, Número) já nascem formatadas como texto
+      faltando.forEach(function (h, i) {
+        if (COLUNAS_TEXTO.indexOf(h) !== -1) {
+          sh.getRange(1, atual.length + 1 + i, sh.getMaxRows(), 1).setNumberFormat('@');
+        }
+      });
       atual = atual.concat(faltando);
     }
   }
@@ -111,7 +129,14 @@ function gravar_(p) {
       'utm_campaign': limpo_(p.utm_campaign),
       'Página': limpo_(p.pagina),
       'Observação': limpo_(p.observacao, LIMITE_OBSERVACAO),
-      'Cadastrador': limpo_(p.cadastrador)
+      // aceita "cadastrador" para páginas antigas ainda em cache no navegador
+      'Captador': limpo_(p.captador || p.cadastrador),
+      'CEP': limpo_(p.cep),
+      'Endereço': limpo_(p.endereco),
+      'Número': limpo_(p.numero),
+      'Bairro': limpo_(p.bairro),
+      'Cidade': limpo_(p.cidade),
+      'UF': limpo_(p.uf)
     };
 
     // Monta a linha na ordem real das colunas da planilha.
