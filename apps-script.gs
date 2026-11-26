@@ -349,7 +349,7 @@ function adicionarCaptador_(login, nome, senha) {
   login = String(login || '').trim().toLowerCase();
   nome = String(nome || '').trim();
   senha = String(senha || '');
-  if (!REGEX_LOGIN.test(login)) throw new Error('Login inválido: use de 3 a 60 letras minúsculas, números, ponto, hífen, sublinhado ou @ (pode ser um e-mail), sem espaços nem acentos.');
+  if (!REGEX_LOGIN.test(login)) throw new Error('Login inválido: use de 3 a 80 letras minúsculas, números, ponto, hífen, sublinhado ou @ (pode ser um e-mail), sem espaços nem acentos.');
   if (nome.length < 2 || nome.length > 60) throw new Error('Nome inválido: use de 2 a 60 caracteres.');
   if (senha.length < 6 || senha.length > 100) throw new Error('A senha precisa ter de 6 a 100 caracteres.');
   const sh = abaCaptadores_(true);
