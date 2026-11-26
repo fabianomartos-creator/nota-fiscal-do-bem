@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nota Fiscal do Bem | Seja Notável</title>
-<meta name="description" content="Seja Notável. Sua nota pode transformar vidas. Cadastre-se na Nota Fiscal do Bem do IORM.">
+<title>Nota Fiscal do Bem | Captadores</title>
+<meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#fdf7e8">
 <style>
   /* ====== CORES (baseadas na Nota Fiscal do Bem) ====== */
   :root{
-    --lime:#a5c823;      /* botão / destaque */
+    --lime:#a5c823;
     --lime-soft:#e9f3c4;
-    --green:#5f8a12;     /* segunda linha dos títulos */
-    --ink:#17221a;       /* texto principal */
+    --green:#5f8a12;
+    --ink:#17221a;
     --muted:#5d665f;
     --cream:#fdf7e8;
     --card:#ffffff;
@@ -24,7 +24,6 @@
   html{-webkit-text-size-adjust:100%}
   body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        color:var(--ink);background:#fff;line-height:1.55}
-  img{max-width:100%;display:block}
   [hidden]{display:none!important}   /* garante que elementos com hidden realmente fiquem escondidos */
   .wrap{margin:0 auto;padding:0 16px}
 
@@ -34,13 +33,11 @@
   .pill.lime{background:var(--lime);color:var(--ink)}
   .pill.dark{background:var(--ink);color:#fff}
 
-  /* página única: título + formulário */
   .hero{background:radial-gradient(1200px 500px at 80% 0%,#fdf0c8 0%,transparent 60%),var(--cream);min-height:100vh;padding:40px 0 56px}
   .one{max-width:560px}
   h1{font-size:clamp(42px,9vw,68px);line-height:.98;font-weight:900;letter-spacing:-.045em;text-align:center;margin-bottom:28px}
   h1 mark{background:linear-gradient(transparent 62%,var(--lime) 62%);color:inherit;padding:0 .04em}
 
-  /* form */
   .card{background:var(--card);border-radius:var(--radius);padding:28px 22px;border:1px solid #efe9d8;
         box-shadow:0 30px 60px -30px rgba(60,50,10,.25)}
   @media(min-width:900px){.card{padding:34px 32px}}
@@ -48,26 +45,10 @@
   .card h2 span{color:var(--green)}
   form{display:grid;gap:14px}
   label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}
-  input[type=text],input[type=email],input[type=tel],textarea,select{width:100%;font:inherit;font-size:16px;padding:13px 16px;
+  input[type=text],input[type=tel],input[type=password]{width:100%;font:inherit;font-size:16px;padding:13px 16px;
         border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;color:var(--ink);transition:border-color .15s,box-shadow .15s}
-  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
-  .invalid input,.invalid textarea,.invalid select{border-color:var(--err)}
-  select{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:42px;
-        background:#fffdf8 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d665f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/16px}
-  select:required:invalid{color:var(--muted)}
-  select option{color:var(--ink)}
-  textarea{display:block;min-height:92px;resize:vertical;line-height:1.45}
-  .count{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
-  .count.max{color:var(--green);font-weight:700}
-  .hint{display:block;font-size:12px;color:var(--muted);margin-top:4px}
-  .sep{border-top:1px dashed var(--line);padding-top:16px;margin-top:2px}
-  .hint.err{color:var(--err)}
-  .hint.ok{color:var(--green)}
-  .row{display:grid;gap:12px}
-  .row.nb{grid-template-columns:112px 1fr}
-  .row.cu{grid-template-columns:1fr 84px}
-  .row>.f,.row input{min-width:0}
-  #uf{text-transform:uppercase}
+  input:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
+  .invalid input{border-color:var(--err)}
   .msg{display:none;color:var(--err);font-size:12px;margin-top:4px}
   .invalid .msg{display:block}
   .check{display:flex;gap:10px;font-size:13px;color:var(--muted);align-items:flex-start;font-weight:500}
@@ -78,9 +59,20 @@
   .safe{font-size:12px;color:var(--muted);text-align:center}
   .alert{display:none;padding:12px;border-radius:12px;font-size:14px}
   .alert.err{display:block;background:#fdecea;color:var(--err)}
-  .done{display:none;text-align:center;padding:24px 0}
+
+  .quem{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);
+        margin-bottom:16px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+  .quem b{color:var(--ink)}
+  .link{background:none;border:0;color:var(--green);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px}
+
+  .mostrar{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);margin:8px 0 0;cursor:pointer}
+  .mostrar input{width:16px;height:16px;accent-color:var(--green)}
+  .troca{text-align:center;font-size:14px;color:var(--muted);margin-top:18px}
+  .dica{font-size:13px;color:var(--muted)}
+
+  .done{text-align:center;padding:24px 0}
   .done .ic{width:60px;height:60px;border-radius:50%;background:var(--lime);margin:0 auto 14px;display:grid;place-items:center}
-  .done a{margin-top:18px}
+  .done .pill{margin-top:18px}
 </style>
 </head>
 <body>
@@ -90,78 +82,101 @@
     <h1>Nota Fiscal<br><mark>do Bem.</mark></h1>
 
     <div class="card" id="card">
-      <div id="formBox">
+
+      <!-- 1) ENTRAR -->
+      <div id="loginBox">
+        <form id="loginForm" novalidate>
+          <div class="f">
+            <label for="login">E-mail</label>
+            <input id="login" name="login" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="seu e-mail">
+          </div>
+          <div class="f">
+            <label for="senha">Senha</label>
+            <input id="senha" name="senha" type="password" autocomplete="current-password" maxlength="200">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="senha"> Mostrar senha</label>
+          </div>
+          <div class="alert" id="loginAlert" role="alert"></div>
+          <button type="submit" id="loginBtn" class="pill lime">Entrar →</button>
+        </form>
+        <p class="troca"><button type="button" id="esqueci" class="link">Esqueci minha senha</button></p>
+        <p class="troca" style="margin-top:6px">Ainda não tem conta? <button type="button" id="criarConta" class="link">Criar conta</button></p>
+      </div>
+
+      <!-- 1b) CRIAR CONTA (qualquer pessoa pode criar a sua) -->
+      <div id="contaBox" hidden>
+        <form id="contaForm" novalidate>
+          <p class="dica">Crie seu acesso de captador. Depois é só entrar com seu e-mail e sua senha.</p>
+          <div class="f">
+            <label for="cNome">Nome completo</label>
+            <input id="cNome" type="text" autocomplete="name" maxlength="60" placeholder="Nome e sobrenome">
+          </div>
+          <div class="f">
+            <label for="cEmail">E-mail</label>
+            <input id="cEmail" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="voce@email.com">
+          </div>
+          <div class="f">
+            <label for="cTel">Telefone</label>
+            <input id="cTel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(00) 00000-0000">
+          </div>
+          <div class="f">
+            <label for="cSenha">Senha</label>
+            <input id="cSenha" type="password" autocomplete="new-password" maxlength="100" placeholder="mínimo 6 caracteres">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="cSenha"> Mostrar senha</label>
+          </div>
+          <input class="hp" type="text" name="site2" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="alert" id="contaAlert" role="alert"></div>
+          <button type="submit" id="contaBtn" class="pill lime">Criar conta e entrar →</button>
+        </form>
+        <p class="troca">Já tem conta? <button type="button" id="jaTenho" class="link">Entrar</button></p>
+      </div>
+
+      <!-- 1c) ESQUECI MINHA SENHA (código por e-mail) -->
+      <div id="recBox" hidden>
+        <form id="recForm1" novalidate>
+          <p class="dica">Informe o e-mail da sua conta. Vamos enviar um código de 6 dígitos para você criar uma senha nova.</p>
+          <div class="f">
+            <label for="rEmail">E-mail</label>
+            <input id="rEmail" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="voce@email.com">
+          </div>
+          <div class="alert" id="rAlert1" role="alert"></div>
+          <button type="submit" id="rBtn1" class="pill lime">Enviar código →</button>
+        </form>
+        <form id="recForm2" novalidate hidden>
+          <p class="dica" id="recInfo"></p>
+          <div class="f">
+            <label for="rCodigo">Código de 6 dígitos</label>
+            <input id="rCodigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000000">
+          </div>
+          <div class="f">
+            <label for="rSenha">Nova senha</label>
+            <input id="rSenha" type="password" autocomplete="new-password" maxlength="100" placeholder="mínimo 6 caracteres">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="rSenha"> Mostrar senha</label>
+          </div>
+          <div class="alert" id="rAlert2" role="alert"></div>
+          <button type="submit" id="rBtn2" class="pill lime">Salvar senha e entrar →</button>
+          <p class="troca" style="margin-top:4px"><button type="button" id="rReenviar" class="link">Não chegou? Enviar outro código</button></p>
+        </form>
+        <p class="troca"><button type="button" id="rVoltar" class="link">Voltar para entrar</button></p>
+      </div>
+
+      <!-- 2) CADASTRAR -->
+      <div id="formBox" hidden>
+        <p class="quem"><span>Captador: <b id="quemNome"></b></span> <button type="button" id="sair" class="link">Sair</button></p>
         <form id="form" novalidate>
           <div class="f" data-f="nome">
             <label for="nome">Nome completo</label>
-            <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required>
-            <span class="msg">Informe seu nome completo.</span>
+            <input id="nome" name="nome" type="text" autocomplete="off" placeholder="Nome e sobrenome" required>
+            <span class="msg">Informe o nome completo (nome e sobrenome).</span>
           </div>
           <div class="f" data-f="cpf">
-            <label for="cpf">CPF <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
-            <input id="cpf" name="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14">
-            <span class="msg">CPF inválido. Corrija ou deixe em branco.</span>
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
+            <span class="msg">Informe um CPF válido.</span>
           </div>
           <div class="f" data-f="whatsapp">
             <label for="whatsapp">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="(00) 00000-0000" maxlength="15" required>
+            <input id="whatsapp" name="whatsapp" type="tel" autocomplete="off" inputmode="numeric" placeholder="(00) 00000-0000" maxlength="15" required>
             <span class="msg">Informe um WhatsApp com DDD.</span>
-          </div>
-          <div class="f" data-f="email">
-            <label for="email">E-mail <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com">
-            <span class="msg">E-mail inválido. Corrija ou deixe em branco.</span>
-          </div>
-          <div class="f" data-f="cep">
-            <label for="cep">CEP <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
-            <input id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" aria-describedby="cepStatus">
-            <span class="hint" id="cepStatus" role="status" aria-live="polite">Digite o CEP e o endereço é preenchido sozinho.</span>
-            <span class="msg">CEP incompleto. Digite os 8 números ou deixe em branco.</span>
-          </div>
-          <div class="f" data-f="endereco">
-            <label for="endereco">Endereço</label>
-            <input id="endereco" name="endereco" type="text" autocomplete="off" maxlength="200" placeholder="Rua, avenida...">
-          </div>
-          <div class="row nb">
-            <div class="f" data-f="numero">
-              <label for="numero">Número</label>
-              <input id="numero" name="numero" type="text" autocomplete="off" maxlength="10" placeholder="Nº">
-            </div>
-            <div class="f" data-f="bairro">
-              <label for="bairro">Bairro</label>
-              <input id="bairro" name="bairro" type="text" autocomplete="off" maxlength="200">
-            </div>
-          </div>
-          <div class="row cu">
-            <div class="f" data-f="cidade">
-              <label for="cidade">Cidade</label>
-              <input id="cidade" name="cidade" type="text" autocomplete="off" maxlength="200">
-            </div>
-            <div class="f" data-f="uf">
-              <label for="uf">UF</label>
-              <input id="uf" name="uf" type="text" autocomplete="off" maxlength="2" placeholder="UF">
-            </div>
-          </div>
-          <div class="f" data-f="observacao">
-            <label for="observacao">Observação <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
-            <textarea id="observacao" name="observacao" rows="3" maxlength="300" placeholder="Alguma informação adicional sobre este cadastro" aria-describedby="obsCount"></textarea>
-            <div class="count" id="obsCount">0/300</div>
-          </div>
-          <div class="f sep" data-f="captador">
-            <label for="captador">Captador</label>
-            <select id="captador" name="captador" required aria-describedby="capHint">
-              <option value="" selected disabled>Selecione o captador</option>
-              <option value="Rafael B">Rafael B</option>
-              <option value="Fabiano M">Fabiano M</option>
-              <option value="Evaldo">Evaldo</option>
-              <option value="Mariana">Mariana</option>
-              <option value="Bruno">Bruno</option>
-              <option value="Elisane">Elisane</option>
-              <option value="Asheley">Asheley</option>
-              <option value="Ana Clara">Ana Clara</option>
-            </select>
-            <span class="hint" id="capHint">Quem captou este cadastro, não o participante inscrito.</span>
-            <span class="msg">Selecione o captador.</span>
           </div>
           <input class="hp" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
           <div class="f" data-f="lgpd">
@@ -169,137 +184,234 @@
               <span>Concordo em receber comunicações do IORM e com o uso dos meus dados para este cadastro, conforme a LGPD.</span></label>
             <span class="msg">É preciso aceitar para continuar.</span>
           </div>
-          <div class="alert" id="alert"></div>
-          <button type="submit" id="btn" class="pill lime">Quero ser Notável →</button>
+          <div class="alert" id="alert" role="alert"></div>
+          <button type="submit" id="btn" class="pill lime">Cadastrar →</button>
           <p class="safe">🔒 Seus dados estão seguros.</p>
         </form>
       </div>
 
-      <div class="done" id="done">
+      <!-- 3) CONFIRMAÇÃO -->
+      <div class="done" id="done" hidden>
         <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#17221a" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
         <h2>Cadastro feito! <span>Você é Notável.</span></h2>
+        <button type="button" id="outra" class="pill lime">Cadastrar outra pessoa</button>
         <a id="waLink" class="pill dark" href="#" target="_blank" rel="noopener" hidden>Entrar no grupo do WhatsApp</a>
       </div>
+
     </div>
   </div>
 </main>
 
 <script>
 /* ====== CONFIGURAÇÃO ====== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoJP04wPWW5VIbr4v8dulUNOC8NGi5CUSx_MWOwuhrvd1hBPZW0czRJkvePYKHYzU/exec";   // termina em /exec
-const WHATSAPP_GROUP = "";                               // opcional: link do grupo após cadastro
-const SEND_TIMEOUT_MS = 30000;                        // tempo máximo de espera pelo envio
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzCaj19yco3tnHNQqljSlASGv-PUSzOBmNCenTCXePdOVJHlQqxyckePUT7naSbdiWVA/exec";             // Apps Script da planilha "Cadastros" (termina em /exec)
+const TIMEOUT_MS = 30000;          // tempo máximo de espera por uma resposta do servidor
+const WHATSAPP_GROUP = "";         // opcional: link do grupo após o cadastro
+const CHAVE_SESSAO = 'nfb_sessao';
 
 const $ = id => document.getElementById(id);
-
 const only = v => v.replace(/\D/g,'');
 function maskCPF(v){v=only(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
 function maskTel(v){v=only(v).slice(0,11);if(v.length<=10)return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2');return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
 function validCPF(c){c=only(c);if(c.length!==11||/^(\d)\1+$/.test(c))return false;
   for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=c[i]*(t+1-i);if(((s*10)%11)%10!=c[t])return false;}return true;}
-
 $('cpf').addEventListener('input',e=>e.target.value=maskCPF(e.target.value));
 $('whatsapp').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
 
-/* ---- CEP: máscara e busca automática do endereço (ViaCEP) ---- */
-function maskCEP(v){v=only(v).slice(0,8);return v.replace(/(\d{5})(\d)/,'$1-$2');}
-const CEP_TIMEOUT_MS = 7000;
-const CEP_DICA = 'Digite o CEP e o endereço é preenchido sozinho.';
-let cepSeq = 0;   // identifica a busca mais recente (respostas antigas são descartadas)
-let cepBusca = '';   // CEP da busca em andamento ou já preenchida (evita consultar o mesmo CEP duas vezes)
-function setCepStatus(t,cls){const s=$('cepStatus');s.textContent=t;s.className='hint'+(cls?' '+cls:'');}
-async function buscarCEP(cep){
-  const seq=++cepSeq; cepBusca=cep;
-  setCepStatus('Buscando endereço...');
-  const ctrl=new AbortController(); const kill=setTimeout(()=>ctrl.abort(),CEP_TIMEOUT_MS);
+/* ---- sessão do captador (só o token fica guardado; a senha nunca) ---- */
+let sessao = null;
+function lerSessao(){try{const s=JSON.parse(localStorage.getItem(CHAVE_SESSAO)||'null');return s&&s.token&&s.nome?s:null;}catch(e){return null;}}
+function guardarSessao(s){sessao=s;try{localStorage.setItem(CHAVE_SESSAO,JSON.stringify(s));}catch(e){}}
+function limparSessao(){sessao=null;try{localStorage.removeItem(CHAVE_SESSAO);}catch(e){}}
+
+/* ---- telas ---- */
+function mostrar(tela){$('loginBox').hidden=tela!=='login';$('contaBox').hidden=tela!=='conta';$('recBox').hidden=tela!=='rec';$('formBox').hidden=tela!=='form';$('done').hidden=tela!=='done';}
+function iniciarTela(){if(sessao){$('quemNome').textContent=sessao.nome;mostrar('form');}else{mostrar('login');}}
+function avisar(id,texto){const a=$(id);a.textContent=texto||'';a.className=texto?'alert err':'alert';}
+
+/* ---- chamada ao servidor (lê a resposta: só mostra sucesso se o servidor confirmou) ---- */
+async function chamar(dados){
+  if(!SCRIPT_URL)throw new Error('nao_configurada');
+  const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),TIMEOUT_MS);
   try{
-    const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/',{signal:ctrl.signal});
-    if(!r.ok) throw new Error('http '+r.status);
-    const d=await r.json();
-    if(seq!==cepSeq) return;                       // o CEP mudou enquanto buscava
-    if(d.erro){ cepBusca=''; setCepStatus('CEP não encontrado. Confira os números ou preencha o endereço abaixo.','err'); return; }
-    $('endereco').value=d.logradouro||''; $('bairro').value=d.bairro||'';
-    $('cidade').value=d.localidade||'';   $('uf').value=(d.uf||'').toUpperCase().slice(0,2);
-    setCepStatus('Endereço encontrado. Agora informe o número da residência.','ok');
-    if(document.activeElement===$('cep')) (($('endereco').value)?$('numero'):$('endereco')).focus();
-  }catch(err){
-    if(seq!==cepSeq) return;
-    cepBusca=''; setCepStatus('Não foi possível buscar o endereço agora. Preencha os campos abaixo.','err');
-  }finally{ clearTimeout(kill); }
+    const r=await fetch(SCRIPT_URL,{method:'POST',body:new URLSearchParams(dados),signal:ctrl.signal});
+    return await r.json();
+  }finally{clearTimeout(t);}
 }
-$('cep').addEventListener('input',e=>{
-  e.target.value=maskCEP(e.target.value);
-  const d=only(e.target.value);
-  if(d.length===8){ if(d!==cepBusca) buscarCEP(d); } else { cepSeq++; cepBusca=''; setCepStatus(d.length?'':CEP_DICA); }
+const novoIdem=()=>(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('i'+Date.now().toString(36)+Math.random().toString(36).slice(2,12));
+let idemAtual=novoIdem();   // identifica ESTE cadastro: se o envio for repetido, o servidor não grava duas vezes
+
+const ERROS_LOGIN={
+  credenciais:'Login ou senha incorretos.',
+  bloqueado:'Muitas tentativas erradas. Aguarde 15 minutos e tente de novo.',
+  dados:'Informe o login e a senha.',
+  servidor:'O servidor teve um problema. Tente de novo em instantes.'};
+const EMAIL_RE=/^[a-z0-9][a-z0-9._%+-]*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
+const NOME_RE=/^[\p{L}\p{N}][\p{L}\p{N} .'\-]{1,59}$/u;
+const nomeValido=n=>{const p=n.split(' ');return NOME_RE.test(n)&&p.length>=2&&p[0].length>=2;};
+const telDigitos=t=>{let d=only(t);if((d.length===12||d.length===13)&&d.indexOf('55')===0)d=d.slice(2);return d;};
+const ERROS_CONTA={
+  nome_invalido:'Informe seu nome completo (nome e sobrenome), só com letras e números.',
+  email_invalido:'E-mail inválido. Confira se está escrito certo (ex.: voce@email.com).',
+  telefone_invalido:'Telefone inválido. Informe com DDD (ex.: (11) 91234-5678).',
+  senha_curta:'A senha precisa ter de 6 a 100 caracteres.',
+  email_existe:'Já existe uma conta com esse e-mail. Toque em "Entrar" e use sua senha (se esqueceu, use "Esqueci minha senha").',
+  nome_existe:'Já existe um captador com esse nome. Acrescente o sobrenome completo ou uma inicial.',
+  limite:'Muitas tentativas de criar conta agora. Aguarde cerca de uma hora e tente de novo.',
+  servidor:'O servidor teve um problema. Tente de novo em instantes.'};
+const ERROS_CAD={
+  nome:'O servidor não aceitou o nome. Informe nome e sobrenome.',
+  whatsapp:'O servidor não aceitou o WhatsApp. Informe com DDD.',
+  cpf:'O servidor não aceitou o CPF. Confira os números.',
+  servidor:'O servidor teve um problema. Toque em Cadastrar para tentar de novo.'};
+const semRede=err=>err&&err.message==='nao_configurada'?'Esta página ainda não está configurada (falta o link do servidor).':err&&err.name==='AbortError'?'Demorou demais para responder. Tente de novo.':'Não foi possível conectar. Verifique a internet e tente de novo.';
+
+/* ---- entrar ---- */
+$('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const login=$('login').value.trim(),senha=$('senha').value;
+  if(!login||!senha){avisar('loginAlert',ERROS_LOGIN.dados);return;}
+  const btn=$('loginBtn');btn.disabled=true;btn.textContent='ENTRANDO...';avisar('loginAlert','');
+  try{
+    const r=await chamar({acao:'login',login,senha});
+    if(r&&r.ok){guardarSessao({token:r.token,nome:r.nome});$('senha').value='';esconderSenhas();iniciarTela();if(!$('formBox').hidden)$('nome').focus();}
+    else avisar('loginAlert',ERROS_LOGIN[r&&r.erro]||ERROS_LOGIN.servidor);
+  }catch(err){avisar('loginAlert',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Entrar →';}
 });
-$('uf').addEventListener('input',e=>e.target.value=e.target.value.replace(/[^a-zA-Z]/g,'').toUpperCase().slice(0,2));
+const ERROS_REC={
+  email_invalido:'E-mail inválido. Confira se está escrito certo (ex.: voce@email.com).',
+  limite:'Muitos pedidos de código. Aguarde um pouco (até 1 hora) e tente de novo.',
+  codigo_invalido:'Código incorreto ou vencido. Confira os 6 dígitos ou peça um código novo.',
+  senha_curta:'A senha nova precisa ter de 6 a 100 caracteres.',
+  servidor:'Não foi possível enviar o e-mail agora. Tente de novo em instantes.'};
 
-const OBS_MAX = 300;
-function updObs(){
-  const t=$('observacao');
-  if(t.value.length>OBS_MAX) t.value=t.value.slice(0,OBS_MAX); // garantia extra além do maxlength
-  $('obsCount').textContent=t.value.length+'/'+OBS_MAX;
-  $('obsCount').classList.toggle('max',t.value.length>=OBS_MAX);
-}
-$('observacao').addEventListener('input',updObs);
+/* ---- mostrar/esconder senha ---- */
+document.querySelectorAll('.vs').forEach(c=>c.addEventListener('change',()=>{$(c.dataset.alvo).type=c.checked?'text':'password';}));
+function esconderSenhas(){document.querySelectorAll('.vs').forEach(c=>{c.checked=false;$(c.dataset.alvo).type='password';});}
 
-const rules = {
-  nome: () => $('nome').value.trim().split(/\s+/).length>=2,
-  cpf: () => !only($('cpf').value) || validCPF($('cpf').value),
-  whatsapp: () => only($('whatsapp').value).length>=10,
-  email: () => !$('email').value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
-  cep: () => !only($('cep').value) || only($('cep').value).length===8,
-  captador: () => $('captador').value!=='',
-  lgpd: () => $('lgpd').checked
-};
+/* ---- criar conta ---- */
+$('cTel').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
+$('criarConta').addEventListener('click',()=>{avisar('contaAlert','');mostrar('conta');$('cNome').focus();});
+$('jaTenho').addEventListener('click',()=>{avisar('loginAlert','');mostrar('login');$('login').focus();});
+$('contaForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(e.target.site2.value)return;           // robô
+  const nome=$('cNome').value.trim().replace(/\s+/g,' ');
+  const email=$('cEmail').value.trim().toLowerCase();
+  const tel=telDigitos($('cTel').value);
+  const senha=$('cSenha').value;
+  if(!nomeValido(nome)){avisar('contaAlert',ERROS_CONTA.nome_invalido);$('cNome').focus();return;}
+  if(email.length>80||!EMAIL_RE.test(email)){avisar('contaAlert',ERROS_CONTA.email_invalido);$('cEmail').focus();return;}
+  if(tel.length!==10&&tel.length!==11){avisar('contaAlert',ERROS_CONTA.telefone_invalido);$('cTel').focus();return;}
+  if(senha.length<6||senha.length>100){avisar('contaAlert',ERROS_CONTA.senha_curta);$('cSenha').focus();return;}
+  const btn=$('contaBtn');btn.disabled=true;btn.textContent='CRIANDO...';avisar('contaAlert','');
+  try{
+    const r=await chamar({acao:'criar_conta',nome,email,telefone:$('cTel').value,senha});
+    if(r&&r.ok){
+      guardarSessao({token:r.token,nome:r.nome});
+      ['cNome','cEmail','cTel','cSenha'].forEach(id=>$(id).value='');esconderSenhas();
+      iniciarTela();$('nome').focus();
+    }else avisar('contaAlert',ERROS_CONTA[r&&r.erro]||ERROS_CONTA.servidor);
+  }catch(err){avisar('contaAlert',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Criar conta e entrar →';}
+});
+
+/* ---- esqueci minha senha ---- */
+let recEmail='';
+function recPasso(n){$('recForm1').hidden=n!==1;$('recForm2').hidden=n!==2;}
+$('esqueci').addEventListener('click',()=>{
+  avisar('rAlert1','');avisar('rAlert2','');recPasso(1);
+  $('rEmail').value=$('login').value.trim();mostrar('rec');$('rEmail').focus();
+});
+$('rVoltar').addEventListener('click',()=>{avisar('loginAlert','');mostrar('login');$('login').focus();});
+$('rReenviar').addEventListener('click',()=>{avisar('rAlert1','');recPasso(1);$('rEmail').value=recEmail;$('rEmail').focus();});
+$('recForm1').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=$('rEmail').value.trim().toLowerCase();
+  if(email.length>80||!EMAIL_RE.test(email)){avisar('rAlert1',ERROS_REC.email_invalido);$('rEmail').focus();return;}
+  const btn=$('rBtn1');btn.disabled=true;btn.textContent='ENVIANDO...';avisar('rAlert1','');
+  try{
+    const r=await chamar({acao:'esqueci',email});
+    if(r&&r.ok){
+      recEmail=email;
+      $('recInfo').textContent='Se existir uma conta com '+email+', enviamos um código de 6 dígitos para esse e-mail. Ele vale por 15 minutos. Confira também a caixa de spam.';
+      avisar('rAlert2','');recPasso(2);$('rCodigo').value='';$('rCodigo').focus();
+    }else avisar('rAlert1',ERROS_REC[r&&r.erro]||ERROS_REC.servidor);
+  }catch(err){avisar('rAlert1',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Enviar código →';}
+});
+$('rCodigo').addEventListener('input',e=>e.target.value=e.target.value.replace(/[^\d ]/g,''));
+$('recForm2').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const codigo=only($('rCodigo').value),senha=$('rSenha').value;
+  if(codigo.length!==6){avisar('rAlert2','Informe o código de 6 dígitos que chegou no seu e-mail.');$('rCodigo').focus();return;}
+  if(senha.length<6||senha.length>100){avisar('rAlert2',ERROS_REC.senha_curta);$('rSenha').focus();return;}
+  const btn=$('rBtn2');btn.disabled=true;btn.textContent='SALVANDO...';avisar('rAlert2','');
+  try{
+    const r=await chamar({acao:'redefinir',email:recEmail,codigo,senha});
+    if(r&&r.ok){
+      guardarSessao({token:r.token,nome:r.nome});
+      $('rCodigo').value='';$('rSenha').value='';esconderSenhas();
+      iniciarTela();$('nome').focus();
+    }else avisar('rAlert2',ERROS_REC[r&&r.erro]||ERROS_REC.servidor);
+  }catch(err){avisar('rAlert2',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Salvar senha e entrar →';}
+});
+
+$('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('senha').value='';esconderSenhas();avisar('loginAlert','');mostrar('login');});
+
+/* ---- validação do cadastro ---- */
+const rules={
+  nome:()=>$('nome').value.trim().split(/\s+/).filter(Boolean).length>=2,
+  cpf:()=>validCPF($('cpf').value),
+  whatsapp:()=>only($('whatsapp').value).length>=10,
+  lgpd:()=>$('lgpd').checked};
 function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}
 Object.keys(rules).forEach(k=>{
-  const el = k==='lgpd'?$('lgpd'):$(k);
+  const el=$(k);
   el.addEventListener('blur',()=>check(k));
   el.addEventListener('input',()=>{if(el.closest('.f').classList.contains('invalid'))check(k);});
 });
 
-$('captador').addEventListener('change',()=>check('captador'));
-
-
-$('form').addEventListener('submit', async e=>{
+/* ---- cadastrar ---- */
+$('form').addEventListener('submit',async e=>{
   e.preventDefault();
-  const bad = Object.keys(rules).filter(k=>!check(k));
-  if(bad.length){ (bad[0]==='lgpd'?$('lgpd'):$(bad[0])).focus(); return; }
-  if(e.target.site.value) return; // robô
+  const bad=Object.keys(rules).filter(k=>!check(k));
+  if(bad.length){$(bad[0]).focus();return;}
+  if(e.target.site.value)return;            // robô
+  if(!sessao){limparSessao();mostrar('login');return;}
 
-  const p = new URLSearchParams(location.search);
-  const data = new URLSearchParams({
-    nome: $('nome').value.trim(),
-    cpf: $('cpf').value,
-    whatsapp: $('whatsapp').value,
-    email: $('email').value.trim().toLowerCase(),
-    utm_source: p.get('utm_source')||'', utm_medium: p.get('utm_medium')||'',
-    utm_campaign: p.get('utm_campaign')||'', pagina: location.href.split('?')[0],
-    cep: $('cep').value, endereco: $('endereco').value.trim(), numero: $('numero').value.trim(),
-    bairro: $('bairro').value.trim(), cidade: $('cidade').value.trim(), uf: $('uf').value.trim(),
-    observacao: $('observacao').value.slice(0,OBS_MAX), // enviada como digitada (sem cortar espaços/quebras)
-    captador: $('captador').value
-  });
+  const dados={acao:'cadastrar',token:sessao.token,idem:idemAtual,
+    nome:$('nome').value.trim(),cpf:$('cpf').value,whatsapp:$('whatsapp').value};
 
-  const btn=$('btn'); btn.disabled=true; btn.textContent='ENVIANDO...'; $('alert').className='alert';
-  const ctrl=new AbortController();
-  const slow=setTimeout(()=>{btn.textContent='AINDA ENVIANDO...';},8000);
-  const kill=setTimeout(()=>ctrl.abort(),SEND_TIMEOUT_MS);
+  const btn=$('btn');btn.disabled=true;btn.textContent='ENVIANDO...';avisar('alert','');
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:data,signal:ctrl.signal});
-    $('formBox').style.display='none'; $('done').style.display='block';
-    if(WHATSAPP_GROUP){ $('waLink').href=WHATSAPP_GROUP; $('waLink').hidden=false; }
-  }catch(err){
-    $('alert').textContent = err && err.name==='AbortError'
-      ? 'O envio demorou mais que o normal e foi interrompido. Toque no botão para tentar de novo.'
-      : 'Não foi possível enviar. Verifique sua conexão e tente novamente.';
-    $('alert').className='alert err';
-    btn.disabled=false; btn.textContent='Quero ser Notável →';
-  }finally{
-    clearTimeout(slow); clearTimeout(kill);
-  }
+    const r=await chamar(dados);
+    if(r&&r.ok){
+      mostrar('done');
+      if(WHATSAPP_GROUP){$('waLink').href=WHATSAPP_GROUP;$('waLink').hidden=false;}
+    }else if(r&&r.erro==='sessao'){
+      limparSessao();mostrar('login');
+      avisar('loginAlert','Sua sessão expirou. Entre de novo: o que você digitou foi mantido.');
+    }else avisar('alert',ERROS_CAD[r&&r.erro]||ERROS_CAD.servidor);
+  }catch(err){avisar('alert',err&&err.message==='nao_configurada'?semRede(err)
+      :err&&err.name==='AbortError'
+      ?'O envio demorou e foi interrompido. Toque em Cadastrar para tentar de novo (não duplica).'
+      :'Não foi possível enviar. Verifique a internet e toque em Cadastrar para tentar de novo.');}
+  finally{btn.disabled=false;btn.textContent='Cadastrar →';}
 });
+
+/* ---- cadastrar outra pessoa ---- */
+$('outra').addEventListener('click',()=>{
+  $('form').reset();
+  document.querySelectorAll('.f.invalid').forEach(x=>x.classList.remove('invalid'));
+  avisar('alert','');idemAtual=novoIdem();
+  iniciarTela();$('nome').focus();
+});
+
+sessao=lerSessao();
+iniciarTela();
 </script>
 </body>
 </html>

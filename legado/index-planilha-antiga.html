@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nota Fiscal do Bem | Seja Notável</title>
+<meta name="description" content="Seja Notável. Sua nota pode transformar vidas. Cadastre-se na Nota Fiscal do Bem do IORM.">
+<meta name="theme-color" content="#fdf7e8">
+<style>
+  /* ====== CORES (baseadas na Nota Fiscal do Bem) ====== */
+  :root{
+    --lime:#a5c823;      /* botão / destaque */
+    --lime-soft:#e9f3c4;
+    --green:#5f8a12;     /* segunda linha dos títulos */
+    --ink:#17221a;       /* texto principal */
+    --muted:#5d665f;
+    --cream:#fdf7e8;
+    --card:#ffffff;
+    --line:#e7e3d6;
+    --err:#d13b2b;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:#fff;line-height:1.55}
+  img{max-width:100%;display:block}
+  [hidden]{display:none!important}   /* garante que elementos com hidden realmente fiquem escondidos */
+  .wrap{margin:0 auto;padding:0 16px}
+
+  .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-weight:700;font-size:14px;
+        text-decoration:none;border:0;cursor:pointer;transition:filter .15s,transform .1s}
+  .pill:hover{filter:brightness(1.04)}
+  .pill.lime{background:var(--lime);color:var(--ink)}
+  .pill.dark{background:var(--ink);color:#fff}
+
+  /* página única: título + formulário */
+  .hero{background:radial-gradient(1200px 500px at 80% 0%,#fdf0c8 0%,transparent 60%),var(--cream);min-height:100vh;padding:40px 0 56px}
+  .one{max-width:560px}
+  h1{font-size:clamp(42px,9vw,68px);line-height:.98;font-weight:900;letter-spacing:-.045em;text-align:center;margin-bottom:28px}
+  h1 mark{background:linear-gradient(transparent 62%,var(--lime) 62%);color:inherit;padding:0 .04em}
+
+  /* form */
+  .card{background:var(--card);border-radius:var(--radius);padding:28px 22px;border:1px solid #efe9d8;
+        box-shadow:0 30px 60px -30px rgba(60,50,10,.25)}
+  @media(min-width:900px){.card{padding:34px 32px}}
+  .card h2{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-top:12px;line-height:1.1}
+  .card h2 span{color:var(--green)}
+  form{display:grid;gap:14px}
+  label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}
+  input[type=text],input[type=email],input[type=tel],textarea,select{width:100%;font:inherit;font-size:16px;padding:13px 16px;
+        border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-soft)}
+  .invalid input,.invalid textarea,.invalid select{border-color:var(--err)}
+  select{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:42px;
+        background:#fffdf8 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d665f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/16px}
+  select:required:invalid{color:var(--muted)}
+  select option{color:var(--ink)}
+  textarea{display:block;min-height:92px;resize:vertical;line-height:1.45}
+  .count{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+  .count.max{color:var(--green);font-weight:700}
+  .hint{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+  .sep{border-top:1px dashed var(--line);padding-top:16px;margin-top:2px}
+  .hint.err{color:var(--err)}
+  .hint.ok{color:var(--green)}
+  .row{display:grid;gap:12px}
+  .row.nb{grid-template-columns:112px 1fr}
+  .row.cu{grid-template-columns:1fr 84px}
+  .row>.f,.row input{min-width:0}
+  #uf{text-transform:uppercase}
+  .msg{display:none;color:var(--err);font-size:12px;margin-top:4px}
+  .invalid .msg{display:block}
+  .check{display:flex;gap:10px;font-size:13px;color:var(--muted);align-items:flex-start;font-weight:500}
+  .check input{margin-top:3px;width:18px;height:18px;accent-color:var(--green);flex:none}
+  .hp{position:absolute;left:-9999px}
+  button.pill{justify-content:center;font-size:17px;padding:16px;font-weight:800}
+  button[disabled]{opacity:.6;cursor:wait}
+  .safe{font-size:12px;color:var(--muted);text-align:center}
+  .alert{display:none;padding:12px;border-radius:12px;font-size:14px}
+  .alert.err{display:block;background:#fdecea;color:var(--err)}
+  .done{display:none;text-align:center;padding:24px 0}
+  .done .ic{width:60px;height:60px;border-radius:50%;background:var(--lime);margin:0 auto 14px;display:grid;place-items:center}
+  .done a{margin-top:18px}
+</style>
+</head>
+<body>
+
+<main class="hero">
+  <div class="wrap one">
+    <h1>Nota Fiscal<br><mark>do Bem.</mark></h1>
+
+    <div class="card" id="card">
+      <div id="formBox">
+        <form id="form" novalidate>
+          <div class="f" data-f="nome">
+            <label for="nome">Nome completo</label>
+            <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required>
+            <span class="msg">Informe seu nome completo.</span>
+          </div>
+          <div class="f" data-f="cpf">
+            <label for="cpf">CPF <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14">
+            <span class="msg">CPF inválido. Corrija ou deixe em branco.</span>
+          </div>
+          <div class="f" data-f="whatsapp">
+            <label for="whatsapp">WhatsApp</label>
+            <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="(00) 00000-0000" maxlength="15" required>
+            <span class="msg">Informe um WhatsApp com DDD.</span>
+          </div>
+          <div class="f" data-f="email">
+            <label for="email">E-mail <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com">
+            <span class="msg">E-mail inválido. Corrija ou deixe em branco.</span>
+          </div>
+          <div class="f" data-f="cep">
+            <label for="cep">CEP <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <input id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" aria-describedby="cepStatus">
+            <span class="hint" id="cepStatus" role="status" aria-live="polite">Digite o CEP e o endereço é preenchido sozinho.</span>
+            <span class="msg">CEP incompleto. Digite os 8 números ou deixe em branco.</span>
+          </div>
+          <div class="f" data-f="endereco">
+            <label for="endereco">Endereço</label>
+            <input id="endereco" name="endereco" type="text" autocomplete="off" maxlength="200" placeholder="Rua, avenida...">
+          </div>
+          <div class="row nb">
+            <div class="f" data-f="numero">
+              <label for="numero">Número</label>
+              <input id="numero" name="numero" type="text" autocomplete="off" maxlength="10" placeholder="Nº">
+            </div>
+            <div class="f" data-f="bairro">
+              <label for="bairro">Bairro</label>
+              <input id="bairro" name="bairro" type="text" autocomplete="off" maxlength="200">
+            </div>
+          </div>
+          <div class="row cu">
+            <div class="f" data-f="cidade">
+              <label for="cidade">Cidade</label>
+              <input id="cidade" name="cidade" type="text" autocomplete="off" maxlength="200">
+            </div>
+            <div class="f" data-f="uf">
+              <label for="uf">UF</label>
+              <input id="uf" name="uf" type="text" autocomplete="off" maxlength="2" placeholder="UF">
+            </div>
+          </div>
+          <div class="f" data-f="observacao">
+            <label for="observacao">Observação <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
+            <textarea id="observacao" name="observacao" rows="3" maxlength="300" placeholder="Alguma informação adicional sobre este cadastro" aria-describedby="obsCount"></textarea>
+            <div class="count" id="obsCount">0/300</div>
+          </div>
+          <div class="f sep" data-f="captador">
+            <label for="captador">Captador</label>
+            <select id="captador" name="captador" required aria-describedby="capHint">
+              <option value="" selected disabled>Selecione o captador</option>
+              <option value="Rafael B">Rafael B</option>
+              <option value="Fabiano M">Fabiano M</option>
+              <option value="Evaldo">Evaldo</option>
+              <option value="Mariana">Mariana</option>
+              <option value="Bruno">Bruno</option>
+              <option value="Elisane">Elisane</option>
+              <option value="Asheley">Asheley</option>
+              <option value="Ana Clara">Ana Clara</option>
+            </select>
+            <span class="hint" id="capHint">Quem captou este cadastro, não o participante inscrito.</span>
+            <span class="msg">Selecione o captador.</span>
+          </div>
+          <input class="hp" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="f" data-f="lgpd">
+            <label class="check"><input type="checkbox" id="lgpd" required>
+              <span>Concordo em receber comunicações do IORM e com o uso dos meus dados para este cadastro, conforme a LGPD.</span></label>
+            <span class="msg">É preciso aceitar para continuar.</span>
+          </div>
+          <div class="alert" id="alert"></div>
+          <button type="submit" id="btn" class="pill lime">Quero ser Notável →</button>
+          <p class="safe">🔒 Seus dados estão seguros.</p>
+        </form>
+      </div>
+
+      <div class="done" id="done">
+        <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#17221a" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+        <h2>Cadastro feito! <span>Você é Notável.</span></h2>
+        <a id="waLink" class="pill dark" href="#" target="_blank" rel="noopener" hidden>Entrar no grupo do WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ====== CONFIGURAÇÃO ====== */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPoJP04wPWW5VIbr4v8dulUNOC8NGi5CUSx_MWOwuhrvd1hBPZW0czRJkvePYKHYzU/exec";   // termina em /exec
+const WHATSAPP_GROUP = "";                               // opcional: link do grupo após cadastro
+const SEND_TIMEOUT_MS = 30000;                        // tempo máximo de espera pelo envio
+
+const $ = id => document.getElementById(id);
+
+const only = v => v.replace(/\D/g,'');
+function maskCPF(v){v=only(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
+function maskTel(v){v=only(v).slice(0,11);if(v.length<=10)return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2');return v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
+function validCPF(c){c=only(c);if(c.length!==11||/^(\d)\1+$/.test(c))return false;
+  for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=c[i]*(t+1-i);if(((s*10)%11)%10!=c[t])return false;}return true;}
+
+$('cpf').addEventListener('input',e=>e.target.value=maskCPF(e.target.value));
+$('whatsapp').addEventListener('input',e=>e.target.value=maskTel(e.target.value));
+
+/* ---- CEP: máscara e busca automática do endereço (ViaCEP) ---- */
+function maskCEP(v){v=only(v).slice(0,8);return v.replace(/(\d{5})(\d)/,'$1-$2');}
+const CEP_TIMEOUT_MS = 7000;
+const CEP_DICA = 'Digite o CEP e o endereço é preenchido sozinho.';
+let cepSeq = 0;   // identifica a busca mais recente (respostas antigas são descartadas)
+let cepBusca = '';   // CEP da busca em andamento ou já preenchida (evita consultar o mesmo CEP duas vezes)
+function setCepStatus(t,cls){const s=$('cepStatus');s.textContent=t;s.className='hint'+(cls?' '+cls:'');}
+async function buscarCEP(cep){
+  const seq=++cepSeq; cepBusca=cep;
+  setCepStatus('Buscando endereço...');
+  const ctrl=new AbortController(); const kill=setTimeout(()=>ctrl.abort(),CEP_TIMEOUT_MS);
+  try{
+    const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/',{signal:ctrl.signal});
+    if(!r.ok) throw new Error('http '+r.status);
+    const d=await r.json();
+    if(seq!==cepSeq) return;                       // o CEP mudou enquanto buscava
+    if(d.erro){ cepBusca=''; setCepStatus('CEP não encontrado. Confira os números ou preencha o endereço abaixo.','err'); return; }
+    $('endereco').value=d.logradouro||''; $('bairro').value=d.bairro||'';
+    $('cidade').value=d.localidade||'';   $('uf').value=(d.uf||'').toUpperCase().slice(0,2);
+    setCepStatus('Endereço encontrado. Agora informe o número da residência.','ok');
+    if(document.activeElement===$('cep')) (($('endereco').value)?$('numero'):$('endereco')).focus();
+  }catch(err){
+    if(seq!==cepSeq) return;
+    cepBusca=''; setCepStatus('Não foi possível buscar o endereço agora. Preencha os campos abaixo.','err');
+  }finally{ clearTimeout(kill); }
+}
+$('cep').addEventListener('input',e=>{
+  e.target.value=maskCEP(e.target.value);
+  const d=only(e.target.value);
+  if(d.length===8){ if(d!==cepBusca) buscarCEP(d); } else { cepSeq++; cepBusca=''; setCepStatus(d.length?'':CEP_DICA); }
+});
+$('uf').addEventListener('input',e=>e.target.value=e.target.value.replace(/[^a-zA-Z]/g,'').toUpperCase().slice(0,2));
+
+const OBS_MAX = 300;
+function updObs(){
+  const t=$('observacao');
+  if(t.value.length>OBS_MAX) t.value=t.value.slice(0,OBS_MAX); // garantia extra além do maxlength
+  $('obsCount').textContent=t.value.length+'/'+OBS_MAX;
+  $('obsCount').classList.toggle('max',t.value.length>=OBS_MAX);
+}
+$('observacao').addEventListener('input',updObs);
+
+const rules = {
+  nome: () => $('nome').value.trim().split(/\s+/).length>=2,
+  cpf: () => !only($('cpf').value) || validCPF($('cpf').value),
+  whatsapp: () => only($('whatsapp').value).length>=10,
+  email: () => !$('email').value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()),
+  cep: () => !only($('cep').value) || only($('cep').value).length===8,
+  captador: () => $('captador').value!=='',
+  lgpd: () => $('lgpd').checked
+};
+function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}
+Object.keys(rules).forEach(k=>{
+  const el = k==='lgpd'?$('lgpd'):$(k);
+  el.addEventListener('blur',()=>check(k));
+  el.addEventListener('input',()=>{if(el.closest('.f').classList.contains('invalid'))check(k);});
+});
+
+$('captador').addEventListener('change',()=>check('captador'));
+
+
+$('form').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const bad = Object.keys(rules).filter(k=>!check(k));
+  if(bad.length){ (bad[0]==='lgpd'?$('lgpd'):$(bad[0])).focus(); return; }
+  if(e.target.site.value) return; // robô
+
+  const p = new URLSearchParams(location.search);
+  const data = new URLSearchParams({
+    nome: $('nome').value.trim(),
+    cpf: $('cpf').value,
+    whatsapp: $('whatsapp').value,
+    email: $('email').value.trim().toLowerCase(),
+    utm_source: p.get('utm_source')||'', utm_medium: p.get('utm_medium')||'',
+    utm_campaign: p.get('utm_campaign')||'', pagina: location.href.split('?')[0],
+    cep: $('cep').value, endereco: $('endereco').value.trim(), numero: $('numero').value.trim(),
+    bairro: $('bairro').value.trim(), cidade: $('cidade').value.trim(), uf: $('uf').value.trim(),
+    observacao: $('observacao').value.slice(0,OBS_MAX), // enviada como digitada (sem cortar espaços/quebras)
+    captador: $('captador').value
+  });
+
+  const btn=$('btn'); btn.disabled=true; btn.textContent='ENVIANDO...'; $('alert').className='alert';
+  const ctrl=new AbortController();
+  const slow=setTimeout(()=>{btn.textContent='AINDA ENVIANDO...';},8000);
+  const kill=setTimeout(()=>ctrl.abort(),SEND_TIMEOUT_MS);
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:data,signal:ctrl.signal});
+    $('formBox').style.display='none'; $('done').style.display='block';
+    if(WHATSAPP_GROUP){ $('waLink').href=WHATSAPP_GROUP; $('waLink').hidden=false; }
+  }catch(err){
+    $('alert').textContent = err && err.name==='AbortError'
+      ? 'O envio demorou mais que o normal e foi interrompido. Toque no botão para tentar de novo.'
+      : 'Não foi possível enviar. Verifique sua conexão e tente novamente.';
+    $('alert').className='alert err';
+    btn.disabled=false; btn.textContent='Quero ser Notável →';
+  }finally{
+    clearTimeout(slow); clearTimeout(kill);
+  }
+});
+</script>
+</body>
+</html>
