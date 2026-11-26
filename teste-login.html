@@ -169,9 +169,9 @@
             <span class="msg">Informe o nome completo (nome e sobrenome).</span>
           </div>
           <div class="f" data-f="cpf">
-            <label for="cpf">CPF <small style="font-weight:500;color:var(--muted)">(opcional)</small></label>
-            <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14">
-            <span class="msg">CPF inválido. Corrija ou deixe em branco.</span>
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
+            <span class="msg">Informe um CPF válido.</span>
           </div>
           <div class="f" data-f="whatsapp">
             <label for="whatsapp">WhatsApp</label>
@@ -262,6 +262,7 @@ const ERROS_CONTA={
 const ERROS_CAD={
   nome:'O servidor não aceitou o nome. Informe nome e sobrenome.',
   whatsapp:'O servidor não aceitou o WhatsApp. Informe com DDD.',
+  cpf:'O servidor não aceitou o CPF. Confira os números.',
   servidor:'O servidor teve um problema. Toque em Cadastrar para tentar de novo.'};
 const semRede=err=>err&&err.message==='nao_configurada'?'Esta página ainda não está configurada (falta o link do servidor).':err&&err.name==='AbortError'?'Demorou demais para responder. Tente de novo.':'Não foi possível conectar. Verifique a internet e tente de novo.';
 
@@ -363,7 +364,7 @@ $('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('se
 /* ---- validação do cadastro ---- */
 const rules={
   nome:()=>$('nome').value.trim().split(/\s+/).filter(Boolean).length>=2,
-  cpf:()=>!only($('cpf').value)||validCPF($('cpf').value),
+  cpf:()=>validCPF($('cpf').value),
   whatsapp:()=>only($('whatsapp').value).length>=10,
   lgpd:()=>$('lgpd').checked};
 function check(k){const ok=rules[k]();document.querySelector(`[data-f="${k}"]`).classList.toggle('invalid',!ok);return ok;}

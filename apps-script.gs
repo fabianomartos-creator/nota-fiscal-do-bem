@@ -13,6 +13,7 @@
  * - Só cadastra quem entrou com login e senha (cada captador tem os seus).
  * - As senhas ficam na aba "Captadores" SÓ como hash (nunca em texto).
  * - O nome gravado na coluna Captador vem sempre da aba "Captadores", nunca da página.
+ * - No cadastro da pessoa, nome completo, CPF (válido) e WhatsApp são obrigatórios.
  * - Depois de MAX_FALHAS senhas erradas, o login fica bloqueado por BLOQUEIO_SEGUNDOS.
  * - Qualquer pessoa pode criar a própria conta na tela de login, com nome completo, e-mail, telefone e senha
  *   (o e-mail é o login; acesso imediato). Para conter abuso: e-mail único, nome de captador único
@@ -340,6 +341,22 @@ function limpo_(v, max) {
   return /^[=+\-@\t\r]/.test(semEspacoInicial) ? "'" + v : v;
 }
 
+// CPF válido (11 dígitos, não repetidos, com os dois dígitos verificadores certos).
+function cpfValido_(c) {
+  c = String(c || '').replace(/\D/g, '');
+  if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
+  for (let t = 9; t < 11; t++) {
+    let s = 0;
+    for (let i = 0; i < t; i++) s += Number(c[i]) * (t + 1 - i);
+    if (((s * 10) % 11) % 10 !== Number(c[t])) return false;
+  }
+  return true;
+}
+function formatarCpf_(c) {
+  c = String(c).replace(/\D/g, '');
+  return c.slice(0, 3) + '.' + c.slice(3, 6) + '.' + c.slice(6, 9) + '-' + c.slice(9);
+}
+
 function acaoCadastrar_(p) {
   const u = validarToken_(p.token);
   if (!u) return { ok: false, erro: 'sessao' };
@@ -347,10 +364,11 @@ function acaoCadastrar_(p) {
   const whatsapp = String(p.whatsapp || '').trim();
   if (nome.split(/\s+/).filter(Boolean).length < 2) return { ok: false, erro: 'nome' };
   if (whatsapp.replace(/\D/g, '').length < 10) return { ok: false, erro: 'whatsapp' };
+  if (!cpfValido_(p.cpf)) return { ok: false, erro: 'cpf' };
   const idem = String(p.idem || '');
   const chaveIdem = /^[A-Za-z0-9-]{8,64}$/.test(idem) ? 'idem_' + idem : null;
   const gravou = gravar_({
-    nome: nome, cpf: p.cpf, whatsapp: whatsapp,
+    nome: nome, cpf: formatarCpf_(p.cpf), whatsapp: whatsapp,
     captador: u.nome            // vem da aba Captadores, não da página
   }, chaveIdem);
   return gravou ? { ok: true } : { ok: true, repetido: true };
