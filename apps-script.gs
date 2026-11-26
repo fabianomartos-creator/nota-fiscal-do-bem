@@ -167,3 +167,116 @@ function atualizarCabecalho() {
   if (ss.getSpreadsheetTimeZone() !== FUSO) ss.setSpreadsheetTimeZone(FUSO);
   garantirCabecalho_(ss.getSheets()[0]);
 }
+
+// =====================================================================
+// CORREÇÃO ÚNICA DOS HORÁRIOS ANTIGOS
+// As inscrições gravadas ANTES desta versão ficaram 5 horas atrasadas (a planilha
+// estava no fuso da Califórnia). Estas duas funções corrigem só a coluna Data/Hora
+// dessas linhas. Use na ordem: 1) previaCorrecaoHorarios  2) corrigirHorariosAntigos
+// Rode logo depois de publicar a Nova versão. Só funciona UMA vez (depois ela se bloqueia).
+// =====================================================================
+const DESLOCAMENTO_HORAS = 5;
+// Linhas com data mais recente que (agora - 2,5 h) já foram gravadas no horário certo
+// pela versão nova e NÃO são alteradas. Por isso, rode a correção em até 2 h após publicar.
+const JANELA_SEGURANCA_HORAS = 2.5;
+const MARCA_CORRECAO = 'HORARIOS_CORRIGIDOS';
+
+// 'dd/MM/yyyy HH:mm:ss' (como aparece na célula) -> milissegundos do relógio de parede (sem fuso)
+function brParaMs_(t) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(String(t).trim());
+  return m ? Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +m[6]) : null;
+}
+// 'yyyy-MM-dd HH:mm:ss' -> milissegundos do relógio de parede
+function isoParaMs_(t) {
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(t);
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+}
+function pad2_(n) { return ('0' + n).slice(-2); }
+function msParaIso_(ms) {
+  const d = new Date(ms);
+  return d.getUTCFullYear() + '-' + pad2_(d.getUTCMonth() + 1) + '-' + pad2_(d.getUTCDate()) + ' ' +
+         pad2_(d.getUTCHours()) + ':' + pad2_(d.getUTCMinutes()) + ':' + pad2_(d.getUTCSeconds());
+}
+function msParaBr_(ms) {
+  const d = new Date(ms);
+  return pad2_(d.getUTCDate()) + '/' + pad2_(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() + ' ' +
+         pad2_(d.getUTCHours()) + ':' + pad2_(d.getUTCMinutes()) + ':' + pad2_(d.getUTCSeconds());
+}
+
+// Monta o plano sem escrever nada.
+function planejarCorrecao_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const ultima = sh.getLastRow();
+  const cab = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (v) { return String(v).trim(); });
+  const col = cab.indexOf('Data/Hora') + 1;
+  if (!col) throw new Error('Coluna "Data/Hora" não encontrada na linha 1. Nada foi alterado.');
+  const plano = { sh: sh, col: col, itens: [], ignoradas: 0, vazias: 0, problemas: [] };
+  if (ultima < 2) return plano;
+
+  const exibidas = sh.getRange(2, col, ultima - 1, 1).getDisplayValues();
+  const agoraMs = isoParaMs_(Utilities.formatDate(new Date(), FUSO, 'yyyy-MM-dd HH:mm:ss'));
+  const limiteMs = agoraMs - JANELA_SEGURANCA_HORAS * 3600000;
+
+  exibidas.forEach(function (linha, i) {
+    const texto = String(linha[0]).trim();
+    const numLinha = i + 2;
+    if (texto === '') { plano.vazias++; return; }
+    const ms = brParaMs_(texto);
+    if (ms === null) { plano.problemas.push('linha ' + numLinha + ': "' + texto + '"'); return; }
+    if (ms >= limiteMs) { plano.ignoradas++; return; }
+    plano.itens.push({ linha: numLinha, antes: texto, depois: ms + DESLOCAMENTO_HORAS * 3600000 });
+  });
+  return plano;
+}
+
+// PASSO 1: só mostra o que seria alterado. Não escreve nada.
+// Veja o resultado em "Registro de execução" (embaixo no editor).
+function previaCorrecaoHorarios() {
+  const plano = planejarCorrecao_();
+  Logger.log('PRÉVIA — nada foi alterado.');
+  Logger.log('Linhas que seriam corrigidas (+' + DESLOCAMENTO_HORAS + ' h): ' + plano.itens.length);
+  Logger.log('Linhas ignoradas por já estarem no horário certo: ' + plano.ignoradas);
+  if (plano.problemas.length) {
+    Logger.log('ATENÇÃO: datas que não consegui ler (a correção NÃO vai rodar enquanto existirem): ' + plano.problemas.join(' | '));
+  }
+  const mostrar = plano.itens.length <= 6 ? plano.itens : plano.itens.slice(0, 3).concat(plano.itens.slice(-3));
+  mostrar.forEach(function (it) {
+    Logger.log('linha ' + it.linha + ': ' + it.antes + '  ->  ' + msParaBr_(it.depois));
+  });
+  if (plano.itens.length > 6) Logger.log('(mostrando as 3 primeiras e as 3 últimas)');
+  const marca = PropertiesService.getScriptProperties().getProperty(MARCA_CORRECAO);
+  if (marca) Logger.log('AVISO: a correção já foi feita em ' + marca + '. Rodar de novo será bloqueado.');
+}
+
+// PASSO 2: aplica a correção, uma única vez. Só altera a coluna Data/Hora.
+function corrigirHorariosAntigos() {
+  const props = PropertiesService.getScriptProperties();
+  const jaFeito = props.getProperty(MARCA_CORRECAO);
+  if (jaFeito) throw new Error('Os horários antigos já foram corrigidos em ' + jaFeito + '. Nada foi alterado.');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const plano = planejarCorrecao_();
+    if (plano.problemas.length) {
+      throw new Error('Há datas que não consegui ler, então NADA foi alterado: ' + plano.problemas.join(' | '));
+    }
+    if (!plano.itens.length) throw new Error('Nenhuma linha para corrigir. Nada foi alterado.');
+
+    // grava em blocos de linhas seguidas
+    let i = 0;
+    while (i < plano.itens.length) {
+      let j = i;
+      while (j + 1 < plano.itens.length && plano.itens[j + 1].linha === plano.itens[j].linha + 1) j++;
+      const bloco = plano.itens.slice(i, j + 1);
+      const faixa = plano.sh.getRange(bloco[0].linha, plano.col, bloco.length, 1);
+      faixa.setValues(bloco.map(function (it) { return [msParaIso_(it.depois)]; }));
+      faixa.setNumberFormat(FORMATO_DATA);
+      i = j + 1;
+    }
+    props.setProperty(MARCA_CORRECAO, Utilities.formatDate(new Date(), FUSO, 'yyyy-MM-dd HH:mm:ss'));
+    Logger.log('Pronto: ' + plano.itens.length + ' horários corrigidos (+' + DESLOCAMENTO_HORAS + ' h). Ignoradas (já certas): ' + plano.ignoradas + '.');
+  } finally {
+    lock.releaseLock();
+  }
+}
