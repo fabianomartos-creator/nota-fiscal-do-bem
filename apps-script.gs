@@ -18,6 +18,8 @@
  *   (o e-mail é o login; acesso imediato). Para conter abuso: e-mail único, nome de captador único
  *   e limite de tentativas de criação por hora. O e-mail NÃO é confirmado por mensagem.
  *   Contas indevidas podem ser desativadas no menu Captadores (a aba Captadores mostra quando e como cada conta nasceu).
+ * - "Esqueci minha senha": um código de 6 dígitos é enviado por e-mail (vale 15 minutos, uso único, 5 tentativas).
+ *   O e-mail sai da conta Google dona deste script. Trocar a senha encerra as sessões antigas.
  */
 
 const CABECALHO = ['Data/Hora', 'Nome', 'CPF', 'WhatsApp', 'Captador'];
@@ -38,6 +40,10 @@ const MAX_FALHAS = 5;
 const BLOQUEIO_SEGUNDOS = 900;
 const SESSAO_HORAS = 12;
 const PROP_SEGREDO = 'SEGREDO_SESSAO';
+const CODIGO_MINUTOS = 15;                 // validade do código de recuperação
+const MAX_TENTATIVAS_CODIGO = 5;           // erros de código antes de invalidá-lo
+const MAX_CODIGOS_POR_EMAIL_HORA = 3;      // pedidos de código por e-mail, por hora
+const MAX_EMAILS_6H = 20;                  // e-mails de recuperação enviados (todos juntos) a cada 6 h; o Gmail comum permite 100/dia
 const MAX_TENTATIVAS_CONTA = 40;          // tentativas de criar conta por hora (somando todo mundo)
 const REGEX_LOGIN = /^[a-z0-9][a-z0-9._@+-]{2,79}$/;     // 3 a 80 caracteres; pode ser um e-mail
 const REGEX_EMAIL = /^[a-z0-9][a-z0-9._%+-]*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -72,6 +78,8 @@ function rotear_(p) {
   const acao = String(p.acao || '');
   if (acao === 'login') return acaoLogin_(p);
   if (acao === 'criar_conta') return acaoCriarConta_(p);
+  if (acao === 'esqueci') return acaoEsqueci_(p);
+  if (acao === 'redefinir') return acaoRedefinir_(p);
   if (acao === 'cadastrar') return acaoCadastrar_(p);
   return { ok: false, erro: 'acao_invalida' };
 }
@@ -103,9 +111,10 @@ function segredo_() {
 function assinar_(texto) {
   return bytesParaHex_(Utilities.computeHmacSha256Signature(texto, segredo_()));
 }
-function criarToken_(login) {
+// A sessão carrega uma marca da senha atual (início do salt): trocar a senha muda o salt e derruba as sessões antigas.
+function criarToken_(login, salt) {
   const validoAte = Date.now() + SESSAO_HORAS * 3600000;
-  const corpo = Utilities.base64EncodeWebSafe(login + '|' + validoAte, Utilities.Charset.UTF_8);
+  const corpo = Utilities.base64EncodeWebSafe(login + '|' + validoAte + '|' + String(salt).slice(0, 8), Utilities.Charset.UTF_8);
   return corpo + '.' + assinar_(corpo);
 }
 // Retorna o captador (ativo) dono do token, ou null.
@@ -117,12 +126,14 @@ function validarToken_(token) {
   try {
     texto = Utilities.newBlob(Utilities.base64DecodeWebSafe(partes[0])).getDataAsString('UTF-8');
   } catch (e) { return null; }
-  const i = texto.lastIndexOf('|');
-  const login = texto.slice(0, i);
-  const validoAte = Number(texto.slice(i + 1));
+  const campos = texto.split('|');
+  if (campos.length !== 3) return null;
+  const login = campos[0];
+  const validoAte = Number(campos[1]);
   if (!login || !(validoAte > Date.now())) return null;
   const u = buscarCaptador_(login);
-  return u && u.ativo ? u : null;
+  if (!u || !u.ativo || campos[2] !== u.salt.slice(0, 8)) return null;
+  return u;
 }
 
 function abaCaptadores_(criar) {
@@ -180,7 +191,7 @@ function acaoLogin_(p) {
     return { ok: false, erro: 'credenciais' };
   }
   cache.remove(chave);
-  return { ok: true, token: criarToken_(login), nome: u.nome };
+  return { ok: true, token: criarToken_(login, u.salt), nome: u.nome };
 }
 
 function agoraIso_() {
@@ -226,16 +237,95 @@ function acaoCriarConta_(p) {
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
+  const salt = Utilities.getUuid();
   try {
     if (buscarCaptador_(email)) return { ok: false, erro: 'email_existe' };
     if (nomeEmUso_(nome)) return { ok: false, erro: 'nome_existe' };
     const sh = abaCaptadores_(true);
-    const salt = Utilities.getUuid();
     sh.appendRow([email, nome, hashSenha_(salt, senha), salt, 'SIM', agoraIso_(), 'autocadastro', telefone]);
   } finally {
     lock.releaseLock();
   }
-  return { ok: true, token: criarToken_(email), nome: nome };
+  return { ok: true, token: criarToken_(email, salt), nome: nome };
+}
+
+// =====================================================================
+// ESQUECI MINHA SENHA (código de 6 dígitos por e-mail)
+// =====================================================================
+
+function gerarCodigo_() {
+  const hex = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+  return ('000000' + (parseInt(hex, 16) % 1000000)).slice(-6);
+}
+
+// Pede o código. A resposta é a MESMA exista a conta ou não (não revela quem está cadastrado).
+function acaoEsqueci_(p) {
+  const email = String(p.email || '').trim().toLowerCase().slice(0, 80);
+  if (!REGEX_EMAIL.test(email)) return { ok: false, erro: 'email_invalido' };
+
+  const cache = CacheService.getScriptCache();
+  const nEmail = Number(cache.get('rec_n_' + email) || 0);
+  const nTotal = Number(cache.get('rec_total') || 0);
+  if (nEmail >= MAX_CODIGOS_POR_EMAIL_HORA || nTotal >= MAX_EMAILS_6H) return { ok: false, erro: 'limite' };
+  cache.put('rec_n_' + email, String(nEmail + 1), 3600);
+  cache.put('rec_total', String(nTotal + 1), 21600);     // 21600 s = 6 h, o máximo do CacheService
+
+  const u = buscarCaptador_(email);
+  if (u && u.ativo) {
+    const codigo = gerarCodigo_();
+    const salt = Utilities.getUuid();
+    const ate = Date.now() + CODIGO_MINUTOS * 60000;
+    cache.put('rec_' + email, JSON.stringify({ hash: hashSenha_(salt, codigo), salt: salt, erros: 0, ate: ate }), CODIGO_MINUTOS * 60);
+    MailApp.sendEmail({
+      to: email,
+      name: 'Nota Fiscal do Bem',
+      subject: 'Código para redefinir sua senha - Nota Fiscal do Bem',
+      body: 'Olá!\n\nSeu código para redefinir a senha é: ' + codigo + '\n\n' +
+            'Ele vale por ' + CODIGO_MINUTOS + ' minutos e só pode ser usado uma vez. ' +
+            'Digite o código na página, junto com a nova senha.\n\n' +
+            'Se você não pediu isso, pode ignorar este e-mail: sua senha continua a mesma.\n\n' +
+            'Nota Fiscal do Bem'
+    });
+  }
+  return { ok: true };
+}
+
+// Confere o código e troca a senha. Quem acerta já entra logado.
+function acaoRedefinir_(p) {
+  const email = String(p.email || '').trim().toLowerCase().slice(0, 80);
+  const codigo = String(p.codigo || '').replace(/\D/g, '');
+  const senha = String(p.senha || '');
+  if (senha.length < 6 || senha.length > 100) return { ok: false, erro: 'senha_curta' };
+
+  const cache = CacheService.getScriptCache();
+  const chave = 'rec_' + email;
+  const bruto = cache.get(chave);
+  if (!bruto) return { ok: false, erro: 'codigo_invalido' };
+  const rec = JSON.parse(bruto);
+
+  if (!/^\d{6}$/.test(codigo) || !iguais_(hashSenha_(rec.salt, codigo), rec.hash)) {
+    rec.erros += 1;
+    const restante = Math.ceil((rec.ate - Date.now()) / 1000);
+    if (rec.erros >= MAX_TENTATIVAS_CODIGO || restante <= 0) cache.remove(chave);
+    else cache.put(chave, JSON.stringify(rec), restante);
+    return { ok: false, erro: 'codigo_invalido' };
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  const novoSalt = Utilities.getUuid();
+  let nome;
+  try {
+    const u = buscarCaptador_(email);
+    if (!u || !u.ativo) return { ok: false, erro: 'codigo_invalido' };
+    abaCaptadores_(false).getRange(u.linha, 3, 1, 2).setValues([[hashSenha_(novoSalt, senha), novoSalt]]);
+    nome = u.nome;
+  } finally {
+    lock.releaseLock();
+  }
+  cache.remove(chave);                 // o código só vale uma vez
+  cache.remove('falhas_' + email);     // e a pessoa não fica presa em bloqueio de senha errada
+  return { ok: true, token: criarToken_(email, novoSalt), nome: nome };
 }
 
 // =====================================================================

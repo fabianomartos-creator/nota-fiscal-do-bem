@@ -98,7 +98,8 @@
           <div class="alert" id="loginAlert" role="alert"></div>
           <button type="submit" id="loginBtn" class="pill lime">Entrar →</button>
         </form>
-        <p class="troca">Ainda não tem conta? <button type="button" id="criarConta" class="link">Criar conta</button></p>
+        <p class="troca"><button type="button" id="esqueci" class="link">Esqueci minha senha</button></p>
+        <p class="troca" style="margin-top:6px">Ainda não tem conta? <button type="button" id="criarConta" class="link">Criar conta</button></p>
       </div>
 
       <!-- 1b) CRIAR CONTA (qualquer pessoa pode criar a sua) -->
@@ -127,6 +128,35 @@
           <button type="submit" id="contaBtn" class="pill lime">Criar conta e entrar →</button>
         </form>
         <p class="troca">Já tem conta? <button type="button" id="jaTenho" class="link">Entrar</button></p>
+      </div>
+
+      <!-- 1c) ESQUECI MINHA SENHA (código por e-mail) -->
+      <div id="recBox" hidden>
+        <form id="recForm1" novalidate>
+          <p class="dica">Informe o e-mail da sua conta. Vamos enviar um código de 6 dígitos para você criar uma senha nova.</p>
+          <div class="f">
+            <label for="rEmail">E-mail</label>
+            <input id="rEmail" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="80" placeholder="voce@email.com">
+          </div>
+          <div class="alert" id="rAlert1" role="alert"></div>
+          <button type="submit" id="rBtn1" class="pill lime">Enviar código →</button>
+        </form>
+        <form id="recForm2" novalidate hidden>
+          <p class="dica" id="recInfo"></p>
+          <div class="f">
+            <label for="rCodigo">Código de 6 dígitos</label>
+            <input id="rCodigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000000">
+          </div>
+          <div class="f">
+            <label for="rSenha">Nova senha</label>
+            <input id="rSenha" type="password" autocomplete="new-password" maxlength="100" placeholder="mínimo 6 caracteres">
+            <label class="mostrar"><input type="checkbox" class="vs" data-alvo="rSenha"> Mostrar senha</label>
+          </div>
+          <div class="alert" id="rAlert2" role="alert"></div>
+          <button type="submit" id="rBtn2" class="pill lime">Salvar senha e entrar →</button>
+          <p class="troca" style="margin-top:4px"><button type="button" id="rReenviar" class="link">Não chegou? Enviar outro código</button></p>
+        </form>
+        <p class="troca"><button type="button" id="rVoltar" class="link">Voltar para entrar</button></p>
       </div>
 
       <!-- 2) CADASTRAR -->
@@ -195,7 +225,7 @@ function guardarSessao(s){sessao=s;try{localStorage.setItem(CHAVE_SESSAO,JSON.st
 function limparSessao(){sessao=null;try{localStorage.removeItem(CHAVE_SESSAO);}catch(e){}}
 
 /* ---- telas ---- */
-function mostrar(tela){$('loginBox').hidden=tela!=='login';$('contaBox').hidden=tela!=='conta';$('formBox').hidden=tela!=='form';$('done').hidden=tela!=='done';}
+function mostrar(tela){$('loginBox').hidden=tela!=='login';$('contaBox').hidden=tela!=='conta';$('recBox').hidden=tela!=='rec';$('formBox').hidden=tela!=='form';$('done').hidden=tela!=='done';}
 function iniciarTela(){if(sessao){$('quemNome').textContent=sessao.nome;mostrar('form');}else{mostrar('login');}}
 function avisar(id,texto){const a=$(id);a.textContent=texto||'';a.className=texto?'alert err':'alert';}
 
@@ -225,7 +255,7 @@ const ERROS_CONTA={
   email_invalido:'E-mail inválido. Confira se está escrito certo (ex.: voce@email.com).',
   telefone_invalido:'Telefone inválido. Informe com DDD (ex.: (11) 91234-5678).',
   senha_curta:'A senha precisa ter de 6 a 100 caracteres.',
-  email_existe:'Já existe uma conta com esse e-mail. Toque em "Entrar" e use sua senha.',
+  email_existe:'Já existe uma conta com esse e-mail. Toque em "Entrar" e use sua senha (se esqueceu, use "Esqueci minha senha").',
   nome_existe:'Já existe um captador com esse nome. Acrescente o sobrenome completo ou uma inicial.',
   limite:'Muitas tentativas de criar conta agora. Aguarde cerca de uma hora e tente de novo.',
   servidor:'O servidor teve um problema. Tente de novo em instantes.'};
@@ -248,6 +278,13 @@ $('loginForm').addEventListener('submit',async e=>{
   }catch(err){avisar('loginAlert',semRede(err));}
   finally{btn.disabled=false;btn.textContent='Entrar →';}
 });
+const ERROS_REC={
+  email_invalido:'E-mail inválido. Confira se está escrito certo (ex.: voce@email.com).',
+  limite:'Muitos pedidos de código. Aguarde um pouco (até 1 hora) e tente de novo.',
+  codigo_invalido:'Código incorreto ou vencido. Confira os 6 dígitos ou peça um código novo.',
+  senha_curta:'A senha nova precisa ter de 6 a 100 caracteres.',
+  servidor:'Não foi possível enviar o e-mail agora. Tente de novo em instantes.'};
+
 /* ---- mostrar/esconder senha ---- */
 document.querySelectorAll('.vs').forEach(c=>c.addEventListener('change',()=>{$(c.dataset.alvo).type=c.checked?'text':'password';}));
 function esconderSenhas(){document.querySelectorAll('.vs').forEach(c=>{c.checked=false;$(c.dataset.alvo).type='password';});}
@@ -277,6 +314,48 @@ $('contaForm').addEventListener('submit',async e=>{
     }else avisar('contaAlert',ERROS_CONTA[r&&r.erro]||ERROS_CONTA.servidor);
   }catch(err){avisar('contaAlert',semRede(err));}
   finally{btn.disabled=false;btn.textContent='Criar conta e entrar →';}
+});
+
+/* ---- esqueci minha senha ---- */
+let recEmail='';
+function recPasso(n){$('recForm1').hidden=n!==1;$('recForm2').hidden=n!==2;}
+$('esqueci').addEventListener('click',()=>{
+  avisar('rAlert1','');avisar('rAlert2','');recPasso(1);
+  $('rEmail').value=$('login').value.trim();mostrar('rec');$('rEmail').focus();
+});
+$('rVoltar').addEventListener('click',()=>{avisar('loginAlert','');mostrar('login');$('login').focus();});
+$('rReenviar').addEventListener('click',()=>{avisar('rAlert1','');recPasso(1);$('rEmail').value=recEmail;$('rEmail').focus();});
+$('recForm1').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=$('rEmail').value.trim().toLowerCase();
+  if(email.length>80||!EMAIL_RE.test(email)){avisar('rAlert1',ERROS_REC.email_invalido);$('rEmail').focus();return;}
+  const btn=$('rBtn1');btn.disabled=true;btn.textContent='ENVIANDO...';avisar('rAlert1','');
+  try{
+    const r=await chamar({acao:'esqueci',email});
+    if(r&&r.ok){
+      recEmail=email;
+      $('recInfo').textContent='Se existir uma conta com '+email+', enviamos um código de 6 dígitos para esse e-mail. Ele vale por 15 minutos. Confira também a caixa de spam.';
+      avisar('rAlert2','');recPasso(2);$('rCodigo').value='';$('rCodigo').focus();
+    }else avisar('rAlert1',ERROS_REC[r&&r.erro]||ERROS_REC.servidor);
+  }catch(err){avisar('rAlert1',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Enviar código →';}
+});
+$('rCodigo').addEventListener('input',e=>e.target.value=e.target.value.replace(/[^\d ]/g,''));
+$('recForm2').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const codigo=only($('rCodigo').value),senha=$('rSenha').value;
+  if(codigo.length!==6){avisar('rAlert2','Informe o código de 6 dígitos que chegou no seu e-mail.');$('rCodigo').focus();return;}
+  if(senha.length<6||senha.length>100){avisar('rAlert2',ERROS_REC.senha_curta);$('rSenha').focus();return;}
+  const btn=$('rBtn2');btn.disabled=true;btn.textContent='SALVANDO...';avisar('rAlert2','');
+  try{
+    const r=await chamar({acao:'redefinir',email:recEmail,codigo,senha});
+    if(r&&r.ok){
+      guardarSessao({token:r.token,nome:r.nome});
+      $('rCodigo').value='';$('rSenha').value='';esconderSenhas();
+      iniciarTela();$('nome').focus();
+    }else avisar('rAlert2',ERROS_REC[r&&r.erro]||ERROS_REC.servidor);
+  }catch(err){avisar('rAlert2',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Salvar senha e entrar →';}
 });
 
 $('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('senha').value='';esconderSenhas();avisar('loginAlert','');mostrar('login');});
