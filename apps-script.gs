@@ -14,6 +14,9 @@
  * - As senhas ficam na aba "Captadores" SÓ como hash (nunca em texto).
  * - O nome gravado na coluna Captador vem sempre da aba "Captadores", nunca da página.
  * - Depois de MAX_FALHAS senhas erradas, o login fica bloqueado por BLOQUEIO_SEGUNDOS.
+ * - Qualquer pessoa pode criar a própria conta na tela de login (acesso imediato). Para conter abuso:
+ *   login único, nome de captador único e limite de tentativas de criação por hora.
+ *   Contas indevidas podem ser desativadas no menu Captadores (a aba Captadores mostra quando e como cada conta nasceu).
  */
 
 const CABECALHO = ['Data/Hora', 'Nome', 'CPF', 'WhatsApp', 'Captador'];
@@ -29,11 +32,14 @@ const FORMATO_DATA = 'dd/MM/yyyy HH:mm:ss';
 const LIMITE_PADRAO = 200;
 
 const ABA_CAPTADORES = 'Captadores';
-const CAB_CAPTADORES = ['Login', 'Nome', 'Hash da senha', 'Salt', 'Ativo'];
+const CAB_CAPTADORES = ['Login', 'Nome', 'Hash da senha', 'Salt', 'Ativo', 'Criado em', 'Origem'];
 const MAX_FALHAS = 5;
 const BLOQUEIO_SEGUNDOS = 900;
 const SESSAO_HORAS = 12;
 const PROP_SEGREDO = 'SEGREDO_SESSAO';
+const MAX_TENTATIVAS_CONTA = 40;          // tentativas de criar conta por hora (somando todo mundo)
+const REGEX_LOGIN = /^[a-z0-9][a-z0-9._@-]{2,59}$/;     // 3 a 60 caracteres; pode ser um e-mail
+const REGEX_NOME_CONTA = /^[\p{L}\p{N}][\p{L}\p{N} .'\-]{1,59}$/u;   // letras, números, espaço, ponto, apóstrofo e hífen
 
 // =====================================================================
 // ENTRADA (o que a página chama)
@@ -63,6 +69,7 @@ function json_(obj) {
 function rotear_(p) {
   const acao = String(p.acao || '');
   if (acao === 'login') return acaoLogin_(p);
+  if (acao === 'criar_conta') return acaoCriarConta_(p);
   if (acao === 'cadastrar') return acaoCadastrar_(p);
   return { ok: false, erro: 'acao_invalida' };
 }
@@ -121,11 +128,22 @@ function abaCaptadores_(criar) {
   let sh = ss.getSheetByName(ABA_CAPTADORES);
   if (!sh && criar) {
     sh = ss.insertSheet(ABA_CAPTADORES, ss.getSheets().length); // sempre no fim: a 1ª aba continua sendo a dos cadastros
-    sh.getRange('A:E').setNumberFormat('@');
+    sh.getRange('A:G').setNumberFormat('@');
     sh.getRange(1, 1, 1, CAB_CAPTADORES.length).setValues([CAB_CAPTADORES]);
     sh.setFrozenRows(1);
+  } else if (sh && criar) {
+    completarCabecalhoCaptadores_(sh);
   }
   return sh;
+}
+// Numa aba criada por uma versão anterior (5 colunas), acrescenta "Criado em" e "Origem" sem mexer no resto.
+function completarCabecalhoCaptadores_(sh) {
+  const atual = sh.getRange(1, 1, 1, CAB_CAPTADORES.length).getValues()[0];
+  let mudou = false;
+  for (let i = 0; i < CAB_CAPTADORES.length; i++) {
+    if (String(atual[i]).trim() === '') { sh.getRange(1, i + 1).setValue(CAB_CAPTADORES[i]); mudou = true; }
+  }
+  if (mudou) sh.getRange('F:G').setNumberFormat('@');
 }
 function buscarCaptador_(login) {
   const sh = abaCaptadores_(false);
@@ -161,6 +179,48 @@ function acaoLogin_(p) {
   }
   cache.remove(chave);
   return { ok: true, token: criarToken_(login), nome: u.nome };
+}
+
+function agoraIso_() {
+  return Utilities.formatDate(new Date(), FUSO, 'yyyy-MM-dd HH:mm:ss');
+}
+// Para comparar nomes sem se importar com maiúsculas, acentos e espaços repetidos.
+function chaveNome_(nome) {
+  return String(nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function nomeEmUso_(nome) {
+  const sh = abaCaptadores_(false);
+  if (!sh || sh.getLastRow() < 2) return false;
+  const alvo = chaveNome_(nome);
+  return sh.getRange(2, 2, sh.getLastRow() - 1, 1).getValues().some(function (l) { return chaveNome_(l[0]) === alvo; });
+}
+
+// Qualquer pessoa cria a própria conta; ela já nasce ativa e a pessoa entra na hora.
+function acaoCriarConta_(p) {
+  const cache = CacheService.getScriptCache();
+  const tentativas = Number(cache.get('tentativas_conta') || 0);
+  if (tentativas >= MAX_TENTATIVAS_CONTA) return { ok: false, erro: 'limite' };
+  cache.put('tentativas_conta', String(tentativas + 1), 3600);
+
+  const login = String(p.login || '').trim().toLowerCase();
+  const nome = String(p.nome || '').trim().replace(/\s+/g, ' ');
+  const senha = String(p.senha || '');
+  if (!REGEX_LOGIN.test(login)) return { ok: false, erro: 'login_invalido' };
+  if (!REGEX_NOME_CONTA.test(nome)) return { ok: false, erro: 'nome_invalido' };
+  if (senha.length < 6 || senha.length > 100) return { ok: false, erro: 'senha_curta' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (buscarCaptador_(login)) return { ok: false, erro: 'login_existe' };
+    if (nomeEmUso_(nome)) return { ok: false, erro: 'nome_existe' };
+    const sh = abaCaptadores_(true);
+    const salt = Utilities.getUuid();
+    sh.appendRow([login, nome, hashSenha_(salt, senha), salt, 'SIM', agoraIso_(), 'autocadastro']);
+  } finally {
+    lock.releaseLock();
+  }
+  return { ok: true, token: criarToken_(login), nome: nome };
 }
 
 // =====================================================================
@@ -274,7 +334,7 @@ function adicionarCaptador_(login, nome, senha) {
   login = String(login || '').trim().toLowerCase();
   nome = String(nome || '').trim();
   senha = String(senha || '');
-  if (!/^[a-z0-9._-]{3,30}$/.test(login)) throw new Error('Login inválido: use de 3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado, sem espaços nem acentos.');
+  if (!REGEX_LOGIN.test(login)) throw new Error('Login inválido: use de 3 a 60 letras minúsculas, números, ponto, hífen, sublinhado ou @ (pode ser um e-mail), sem espaços nem acentos.');
   if (nome.length < 2 || nome.length > 60) throw new Error('Nome inválido: use de 2 a 60 caracteres.');
   if (senha.length < 6 || senha.length > 100) throw new Error('A senha precisa ter de 6 a 100 caracteres.');
   const sh = abaCaptadores_(true);
@@ -285,7 +345,7 @@ function adicionarCaptador_(login, nome, senha) {
     sh.getRange(existente.linha, 2, 1, 4).setValues([[nome, hash, salt, 'SIM']]);
     return 'atualizado';
   }
-  sh.appendRow([login, nome, hash, salt, 'SIM']);
+  sh.appendRow([login, nome, hash, salt, 'SIM', agoraIso_(), 'menu']);
   return 'criado';
 }
 function desativarCaptador_(login) {

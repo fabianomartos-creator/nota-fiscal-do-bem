@@ -65,6 +65,9 @@
   .quem b{color:var(--ink)}
   .link{background:none;border:0;color:var(--green);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px}
 
+  .troca{text-align:center;font-size:14px;color:var(--muted);margin-top:18px}
+  .dica{font-size:13px;color:var(--muted)}
+
   .done{text-align:center;padding:24px 0}
   .done .ic{width:60px;height:60px;border-radius:50%;background:var(--lime);margin:0 auto 14px;display:grid;place-items:center}
   .done .pill{margin-top:18px}
@@ -83,7 +86,7 @@
         <form id="loginForm" novalidate>
           <div class="f">
             <label for="login">Login</label>
-            <input id="login" name="login" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60">
+            <input id="login" name="login" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" placeholder="seu login ou e-mail">
           </div>
           <div class="f">
             <label for="senha">Senha</label>
@@ -92,6 +95,34 @@
           <div class="alert" id="loginAlert" role="alert"></div>
           <button type="submit" id="loginBtn" class="pill lime">Entrar →</button>
         </form>
+        <p class="troca">Ainda não tem conta? <button type="button" id="criarConta" class="link">Criar conta</button></p>
+      </div>
+
+      <!-- 1b) CRIAR CONTA (qualquer pessoa pode criar a sua) -->
+      <div id="contaBox" hidden>
+        <form id="contaForm" novalidate>
+          <p class="dica">Crie seu acesso de captador. Depois é só entrar com este login e esta senha.</p>
+          <div class="f">
+            <label for="cNome">Seu nome (como vai aparecer na planilha)</label>
+            <input id="cNome" type="text" autocomplete="name" maxlength="60" placeholder="Ex.: Rafael B">
+          </div>
+          <div class="f">
+            <label for="cLogin">Login</label>
+            <input id="cLogin" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" placeholder="sem espaços e sem acentos (pode ser seu e-mail)">
+          </div>
+          <div class="f">
+            <label for="cSenha">Senha</label>
+            <input id="cSenha" type="password" autocomplete="new-password" maxlength="100" placeholder="mínimo 6 caracteres">
+          </div>
+          <div class="f">
+            <label for="cSenha2">Repita a senha</label>
+            <input id="cSenha2" type="password" autocomplete="new-password" maxlength="100">
+          </div>
+          <input class="hp" type="text" name="site2" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="alert" id="contaAlert" role="alert"></div>
+          <button type="submit" id="contaBtn" class="pill lime">Criar conta e entrar →</button>
+        </form>
+        <p class="troca">Já tem conta? <button type="button" id="jaTenho" class="link">Entrar</button></p>
       </div>
 
       <!-- 2) CADASTRAR -->
@@ -160,7 +191,7 @@ function guardarSessao(s){sessao=s;try{localStorage.setItem(CHAVE_SESSAO,JSON.st
 function limparSessao(){sessao=null;try{localStorage.removeItem(CHAVE_SESSAO);}catch(e){}}
 
 /* ---- telas ---- */
-function mostrar(tela){$('loginBox').hidden=tela!=='login';$('formBox').hidden=tela!=='form';$('done').hidden=tela!=='done';}
+function mostrar(tela){$('loginBox').hidden=tela!=='login';$('contaBox').hidden=tela!=='conta';$('formBox').hidden=tela!=='form';$('done').hidden=tela!=='done';}
 function iniciarTela(){if(sessao){$('quemNome').textContent=sessao.nome;mostrar('form');}else{mostrar('login');}}
 function avisar(id,texto){const a=$(id);a.textContent=texto||'';a.className=texto?'alert err':'alert';}
 
@@ -181,6 +212,17 @@ const ERROS_LOGIN={
   bloqueado:'Muitas tentativas erradas. Aguarde 15 minutos e tente de novo.',
   dados:'Informe o login e a senha.',
   servidor:'O servidor teve um problema. Tente de novo em instantes.'};
+const LOGIN_RE=/^[a-z0-9][a-z0-9._@-]{2,59}$/;
+const NOME_RE=/^[\p{L}\p{N}][\p{L}\p{N} .'\-]{1,59}$/u;
+const ERROS_CONTA={
+  nome_invalido:'Nome inválido: use letras e números (de 2 a 60 caracteres), sem símbolos como = + @.',
+  login_invalido:'Login inválido: use de 3 a 60 letras minúsculas, números, ponto, hífen, sublinhado ou @ (pode ser seu e-mail), sem espaços nem acentos.',
+  senha_curta:'A senha precisa ter de 6 a 100 caracteres.',
+  senhas_diferentes:'As duas senhas não são iguais.',
+  login_existe:'Esse login já está em uso. Escolha outro. Se for o seu, toque em "Entrar" e use sua senha.',
+  nome_existe:'Já existe um captador com esse nome. Use outro (por exemplo, acrescentando a inicial do sobrenome).',
+  limite:'Muitas tentativas de criar conta agora. Aguarde cerca de uma hora e tente de novo.',
+  servidor:'O servidor teve um problema. Tente de novo em instantes.'};
 const ERROS_CAD={
   nome:'O servidor não aceitou o nome. Informe nome e sobrenome.',
   whatsapp:'O servidor não aceitou o WhatsApp. Informe com DDD.',
@@ -200,6 +242,31 @@ $('loginForm').addEventListener('submit',async e=>{
   }catch(err){avisar('loginAlert',semRede(err));}
   finally{btn.disabled=false;btn.textContent='Entrar →';}
 });
+/* ---- criar conta ---- */
+$('criarConta').addEventListener('click',()=>{avisar('contaAlert','');mostrar('conta');$('cNome').focus();});
+$('jaTenho').addEventListener('click',()=>{avisar('loginAlert','');mostrar('login');$('login').focus();});
+$('contaForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(e.target.site2.value)return;           // robô
+  const nome=$('cNome').value.trim().replace(/\s+/g,' ');
+  const login=$('cLogin').value.trim().toLowerCase();
+  const senha=$('cSenha').value,senha2=$('cSenha2').value;
+  if(!NOME_RE.test(nome)){avisar('contaAlert',ERROS_CONTA.nome_invalido);$('cNome').focus();return;}
+  if(!LOGIN_RE.test(login)){avisar('contaAlert',ERROS_CONTA.login_invalido);$('cLogin').focus();return;}
+  if(senha.length<6||senha.length>100){avisar('contaAlert',ERROS_CONTA.senha_curta);$('cSenha').focus();return;}
+  if(senha!==senha2){avisar('contaAlert',ERROS_CONTA.senhas_diferentes);$('cSenha2').focus();return;}
+  const btn=$('contaBtn');btn.disabled=true;btn.textContent='CRIANDO...';avisar('contaAlert','');
+  try{
+    const r=await chamar({acao:'criar_conta',nome,login,senha});
+    if(r&&r.ok){
+      guardarSessao({token:r.token,nome:r.nome});
+      ['cNome','cLogin','cSenha','cSenha2'].forEach(id=>$(id).value='');
+      iniciarTela();$('nome').focus();
+    }else avisar('contaAlert',ERROS_CONTA[r&&r.erro]||ERROS_CONTA.servidor);
+  }catch(err){avisar('contaAlert',semRede(err));}
+  finally{btn.disabled=false;btn.textContent='Criar conta e entrar →';}
+});
+
 $('sair').addEventListener('click',()=>{limparSessao();$('login').value='';$('senha').value='';avisar('loginAlert','');mostrar('login');});
 
 /* ---- validação do cadastro ---- */
