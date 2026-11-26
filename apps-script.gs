@@ -148,3 +148,10 @@ function gravar_(p) {
     lock.releaseLock();
   }
 }
+
+// Atualiza só o cabeçalho (renomeia Cadastrador -> Captador e acrescenta as colunas novas).
+// Serve para conferir se este código está no projeto certo: selecione esta função
+// na barra de cima do editor e clique em Executar. Não grava nenhuma inscrição.
+function atualizarCabecalho() {
+  garantirCabecalho_(SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]);
+}
